@@ -43,7 +43,11 @@ install -m 0755 "$LUCI_FEED/modules/luci-base/src/po2lmo" "$SDK/staging_dir/host
 cd "$SDK"
 make defconfig
 make package/luci-app-haproxy-manager/clean V=s
-make package/luci-app-haproxy-manager/compile V=s CONFIG_LUCI_JSMIN= CONFIG_LUCI_CSSTIDY=
+pkg_version="$(sed -n 's/^PKG_VERSION:=//p' "$PKG_DST/Makefile")"
+pkg_release="$(sed -n 's/^PKG_RELEASE:=//p' "$PKG_DST/Makefile")"
+make package/luci-app-haproxy-manager/compile V=s \
+	CONFIG_LUCI_JSMIN= CONFIG_LUCI_CSSTIDY= \
+	PKG_PO_VERSION="${pkg_version}-r${pkg_release}"
 
 if find "$SDK/bin" -type f -name 'luci-app-haproxy-manager*.apk' -print -quit | grep -q .; then
 	find "$DIST" -maxdepth 1 -type f \( \
