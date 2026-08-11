@@ -34,14 +34,16 @@ cp -R "$PKG_SRC" "$PKG_DST"
 mkdir -p "$LINK_DIR"
 rm -rf "$LINK_DIR/luci-app-haproxy-manager" "$LINK_DIR/luci-base" "$LINK_DIR/csstidy"
 ln -s "../../../feeds/luci/applications/luci-app-haproxy-manager" "$LINK_DIR/luci-app-haproxy-manager"
-ln -s "../../../feeds/luci/modules/luci-base" "$LINK_DIR/luci-base"
-ln -s "../../../feeds/luci/contrib/package/csstidy" "$LINK_DIR/csstidy"
 mkdir -p "$DIST"
+
+make -C "$LUCI_FEED/modules/luci-base/src" clean po2lmo
+mkdir -p "$SDK/staging_dir/hostpkg/bin"
+install -m 0755 "$LUCI_FEED/modules/luci-base/src/po2lmo" "$SDK/staging_dir/hostpkg/bin/po2lmo"
 
 cd "$SDK"
 make defconfig
 make package/luci-app-haproxy-manager/clean V=s
-make package/luci-app-haproxy-manager/compile V=s
+make package/luci-app-haproxy-manager/compile V=s CONFIG_LUCI_JSMIN= CONFIG_LUCI_CSSTIDY=
 
 if find "$SDK/bin" -type f -name 'luci-app-haproxy-manager*.apk' -print -quit | grep -q .; then
 	find "$DIST" -maxdepth 1 -type f \( \
