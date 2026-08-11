@@ -1,5 +1,8 @@
 # LuCI HAProxy Manager
 
+[![Build and release packages](https://github.com/umk0/openwrt-luci-haproxy-manager/actions/workflows/build.yml/badge.svg)](https://github.com/umk0/openwrt-luci-haproxy-manager/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/umk0/openwrt-luci-haproxy-manager)](https://github.com/umk0/openwrt-luci-haproxy-manager/releases/latest)
+
 LuCI application for publishing Web and TCP services through HAProxy on
 OpenWrt. The interface uses service presets while retaining an expert editor
 for `/etc/haproxy.cfg`.
@@ -24,12 +27,16 @@ port forwarding.
 
 ## Supported OpenWrt versions
 
-- OpenWrt 24.10 uses `.ipk` packages and `opkg`.
-- OpenWrt 25.12 and newer use `.apk` packages and `apk`.
+| OpenWrt series | Package manager | Package format | CI targets |
+| --- | --- | --- | --- |
+| 24.10 | `opkg` | `.ipk` | x86_64, ARM64, MIPS |
+| 25.12 | `apk` | `.apk` | x86_64, ARM64, MIPS |
 
 The application package is architecture-independent. SDK builds still need to
 target the same OpenWrt release as the router so package metadata and
-dependencies match.
+dependencies match. GitHub Actions resolves the newest patch release in both
+maintained series directly from the official OpenWrt download index. End-of-life
+OpenWrt releases are not part of the compatibility matrix.
 
 ## Install
 
@@ -47,9 +54,8 @@ opkg install /tmp/luci-i18n-haproxy-manager-ru_*.ipk
 OpenWrt 25.12 and newer:
 
 ```sh
-apk update
-apk add --allow-untrusted /tmp/luci-app-haproxy-manager-*.apk
-apk add --allow-untrusted /tmp/luci-i18n-haproxy-manager-ru-*.apk
+apk add --no-network --allow-untrusted /tmp/luci-app-haproxy-manager-*.apk
+apk add --no-network --allow-untrusted /tmp/luci-i18n-haproxy-manager-ru-*.apk
 /etc/init.d/rpcd restart
 ```
 
@@ -96,9 +102,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-openwrt-sdk-docker.ps1 
   -SdkArchive .\openwrt-sdk-25.12.5-mediatek-mt7622_gcc-14.3.0_musl.Linux-x86_64.tar.zst
 ```
 
-Build outputs are copied to `dist/`. GitHub Actions builds `.ipk` files on every
-push and can build OpenWrt 25.12 `.apk` files on tagged or manually dispatched
-runs.
+Build outputs are copied to `dist/`. GitHub Actions validates the latest 24.10
+and 25.12 SDKs on x86_64, ARM64, and MIPS for pushes, pull requests, manual runs,
+and a weekly schedule. Tags matching `v*` create a GitHub Release containing:
+
+- individual base and language packages;
+- separate IPK and APK ZIP bundles;
+- installation instructions and SHA-256 checksums.
 
 ## Configuration safety
 

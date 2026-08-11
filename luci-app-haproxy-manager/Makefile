@@ -4,7 +4,7 @@ PKG_NAME:=luci-app-haproxy-manager
 PKG_VERSION:=0.4.0
 PKG_RELEASE:=2
 PKG_LICENSE:=MIT
-PKG_MAINTAINER:=HAProxy Manager contributors
+PKG_MAINTAINER:=Philipp <job@umk0.ru>
 PKGARCH:=all
 
 include $(INCLUDE_DIR)/package.mk

@@ -3,6 +3,8 @@
 ## 0.4.0 - 2026-08-11
 
 - Keep only the seven newest recovery points and prune older snapshots automatically.
+- Build current OpenWrt 24.10 and 25.12 packages on x86_64, ARM64, and MIPS,
+  with tagged GitHub Releases, language bundles, and checksums.
 - Replace protocol records with service presets for Web, SSH, Remote Desktop,
   and custom TCP mappings.
 - Combine HTTP and HTTPS into one Web service with separate backend ports.

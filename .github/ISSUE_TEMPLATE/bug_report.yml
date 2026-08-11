@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a reproducible HAProxy Manager problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remove passwords, private keys, public IP addresses, and real domains before posting.
+  - type: input
+    id: openwrt
+    attributes:
+      label: OpenWrt version
+      placeholder: 25.12.5
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: HAProxy Manager version
+      placeholder: 0.4.0-r2
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Package format
+      options: [APK, IPK]
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include steps to reproduce, expected behavior, and sanitized logs.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Sanitized configuration
+      render: shell

@@ -113,7 +113,7 @@ def control_file(name, depends, description):
     return f"""Package: {name}
 Version: {VERSION}
 Architecture: {ARCH}
-Maintainer: HAProxy Manager contributors
+Maintainer: Philipp <job@umk0.ru>
 Section: luci
 Priority: optional
 Depends: {depends}

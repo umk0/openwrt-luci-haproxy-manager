@@ -60,6 +60,12 @@ def check_syntax():
     node = shutil.which("node")
     shell = shutil.which("sh")
 
+    for path in (ROOT / "scripts").glob("*.py"):
+        try:
+            compile(path.read_text(encoding="utf-8"), str(path), "exec")
+        except SyntaxError as exc:
+            errors += fail(f"Python syntax error in {path.relative_to(ROOT)}: {exc}")
+
     if node:
         for path in (PACKAGE / "htdocs").rglob("*.js"):
             result = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
