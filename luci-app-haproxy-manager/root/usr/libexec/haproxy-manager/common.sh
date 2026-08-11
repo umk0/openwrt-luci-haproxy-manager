@@ -118,7 +118,7 @@ is_valid_port_map() {
 }
 
 required_ports() {
-	local section enabled kind protocol http_enabled https_enabled map
+	local section enabled kind http_enabled https_enabled map
 	local http_port https_port
 
 	http_port="$(uci_get main http_port 80)"

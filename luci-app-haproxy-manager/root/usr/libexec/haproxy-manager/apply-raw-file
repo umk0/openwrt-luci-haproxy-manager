@@ -14,4 +14,3 @@ esac
 cp "$SRC" "$HAPROXY_CFG"
 /etc/init.d/haproxy restart
 echo "Raw HAProxy config applied"
-

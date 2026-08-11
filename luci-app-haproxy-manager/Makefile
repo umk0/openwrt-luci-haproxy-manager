@@ -9,7 +9,8 @@ include $(TOPDIR)/rules.mk
 PKG_VERSION:=0.5.0
 PKG_RELEASE:=1
 PKG_LICENSE:=MIT
-LUCI_MAINTAINER:=Philipp <job@umk0.ru>
+PKG_MAINTAINER:=Philipp Shklyaev <job@umk0.ru>
+LUCI_MAINTAINER:=$(PKG_MAINTAINER)
 
 LUCI_TITLE:=LuCI HAProxy Manager
 LUCI_DESCRIPTION:=Manage Web and TCP HAProxy services, firewall access, and recovery points.
