@@ -18,13 +18,15 @@ OpenWrt router or in an OpenWrt SDK environment.
 
 ## Translations
 
-English strings belong in the LuCI JavaScript views. Optional translations live
-in `luci-app-haproxy-manager/i18n/<language>/` and are distributed as separate
-packages. Every language catalog must contain all keys reported by
-`scripts/check.py`.
+English strings belong in the LuCI JavaScript views and use the standard `_()`
+translation function. Optional translations live in
+`luci-app-haproxy-manager/po/<language>/haproxy-manager.po`; `luci.mk` distributes
+them as separate packages. Every language catalog must contain all keys reported
+by `scripts/check.py`.
 
 ## OpenWrt upstream
 
-An eventual contribution to `openwrt/luci` will use its native `luci.mk` and PO
-translation layout. Upstream commits must follow the OpenWrt contribution rules,
-including a package-prefixed subject and a real-name `Signed-off-by` line.
+The application uses the native `luci.mk` and PO translation layout expected by
+`openwrt/luci`. Upstream commits must follow the OpenWrt contribution rules,
+including a package-prefixed subject and a real-name `Signed-off-by` line. Once
+accepted upstream, translations are maintained through OpenWrt Weblate.

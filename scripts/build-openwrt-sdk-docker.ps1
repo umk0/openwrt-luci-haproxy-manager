@@ -30,35 +30,7 @@ tar --zstd -xf "/archive/$ArchiveName" -C /build
 sdk_dir=`$(find /build -maxdepth 1 -type d -name 'openwrt-sdk-*' | head -1)
 test -n "`$sdk_dir"
 mv "`$sdk_dir" /build/sdk
-rm -rf /build/sdk/package/luci-app-haproxy-manager
-cp -R /work/luci-app-haproxy-manager /build/sdk/package/
-cd /build/sdk
-make defconfig
-make package/luci-app-haproxy-manager/compile V=s
-if find /build/sdk/bin -type f -name 'luci-app-haproxy-manager*.apk' -print -quit | grep -q .; then
-  find /work/dist -maxdepth 1 -type f \( \
-    -name 'luci-app-haproxy-manager*.apk' -o \
-    -name 'luci-i18n-haproxy-manager*.apk' \
-  \) -delete
-fi
-if find /build/sdk/bin -type f -name 'luci-app-haproxy-manager*.ipk' -print -quit | grep -q .; then
-  find /work/dist -maxdepth 1 -type f \( \
-    -name 'luci-app-haproxy-manager*.ipk' -o \
-    -name 'luci-i18n-haproxy-manager*.ipk' \
-  \) -delete
-fi
-find /build/sdk/bin -type f \( \
-  -name 'luci-app-haproxy-manager*.ipk' -o \
-  -name 'luci-app-haproxy-manager*.apk' -o \
-  -name 'luci-i18n-haproxy-manager*.ipk' -o \
-  -name 'luci-i18n-haproxy-manager*.apk' \
-\) -exec cp -v {} /work/dist/ \;
-find /work/dist -maxdepth 1 -type f \( \
-  -name 'luci-app-haproxy-manager*.ipk' -o \
-  -name 'luci-app-haproxy-manager*.apk' -o \
-  -name 'luci-i18n-haproxy-manager*.ipk' -o \
-  -name 'luci-i18n-haproxy-manager*.apk' \
-\) -print
+/work/scripts/build-openwrt-sdk.sh /build/sdk
 "@
 
 docker run --rm `

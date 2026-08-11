@@ -4,23 +4,19 @@ import io
 import os
 import pathlib
 import re
-import subprocess
-import sys
+import shutil
 import tarfile
+
+from i18n import LANGUAGES, compile_catalogs
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PKG = ROOT / "luci-app-haproxy-manager"
 DIST = ROOT / "dist"
+I18N_BUILD = ROOT / ".build" / "i18n"
 NAME = "luci-app-haproxy-manager"
 ARCH = "all"
 
-LANG_PACKAGES = (
-    ("ru", "Russian"),
-    ("es", "Spanish"),
-    ("ko", "Korean"),
-    ("ja", "Japanese"),
-    ("zh-cn", "Simplified Chinese"),
-)
+LANG_PACKAGES = tuple((package_language, title) for _, package_language, title in LANGUAGES)
 
 
 def package_version():
@@ -156,7 +152,9 @@ def main():
     for old in DIST.glob("luci-i18n-haproxy-manager-*.ipk"):
         old.unlink()
 
-    subprocess.run([sys.executable, str(PKG / "build-lmo.py"), str(PKG)], check=True)
+    if I18N_BUILD.exists():
+        shutil.rmtree(I18N_BUILD)
+    language_roots = compile_catalogs(I18N_BUILD)
 
     postinst = """#!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] && exit 0
@@ -193,7 +191,7 @@ exit 0
             f"luci-i18n-haproxy-manager-{lang}",
             "luci-app-haproxy-manager",
             f"{title} translation package for luci-app-haproxy-manager.",
-            ((PKG / "i18n" / lang, "."),),
+            ((language_roots[lang], "."),),
             postinst=i18n_post,
             postrm=i18n_post,
         )

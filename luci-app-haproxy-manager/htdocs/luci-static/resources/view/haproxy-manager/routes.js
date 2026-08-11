@@ -1,9 +1,9 @@
 'use strict';
+/* global hmUi */
 'require view';
 'require form';
 'require fs';
 'require ui';
-'require haproxy-manager.i18n as hmI18n';
 'require haproxy-manager.ui as hmUi';
 
 function listValue(value) {
@@ -19,16 +19,16 @@ function routeKind(map, sectionId) {
 		map.data.get('haproxy_manager', sectionId, 'protocol') || 'web';
 }
 
-function kindLabel(t, kind) {
+function kindLabel(kind) {
 	switch (kind) {
-	case 'web': return t('Web');
-	case 'ssh': return t('SSH');
-	case 'rdp': return t('Remote Desktop');
-	case 'custom': return t('Custom TCP');
-	case 'http': return t('HTTP only');
-	case 'https': return t('HTTPS only');
-	case 'both': return t('Legacy Web');
-	default: return t('TCP');
+	case 'web': return _('Web');
+	case 'ssh': return _('SSH');
+	case 'rdp': return _('Remote Desktop');
+	case 'custom': return _('Custom TCP');
+	case 'http': return _('HTTP only');
+	case 'https': return _('HTTPS only');
+	case 'both': return _('Legacy Web');
+	default: return _('TCP');
 	}
 }
 
@@ -93,7 +93,6 @@ function routePorts(map, sectionId, kind) {
 return view.extend({
 	load: function() {
 		return Promise.all([
-			hmI18n.load(),
 			fs.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() {
 				return { stdout: '' };
 			})
@@ -102,126 +101,125 @@ return view.extend({
 
 	render: function(data) {
 		var m, s, o;
-		var firewall = parseFirewall(data[1].stdout);
-		var t = function(message) { return hmI18n.t(message); };
+		var firewall = parseFirewall(data[0].stdout);
 
 		hmUi.ensureStyles();
 
-		m = new form.Map('haproxy_manager', t('HAProxy Services'),
-			t('Publish Web, SSH, Remote Desktop, and custom TCP services from one place.'));
+		m = new form.Map('haproxy_manager', _('HAProxy Services'),
+			_('Publish Web, SSH, Remote Desktop, and custom TCP services from one place.'));
 
-		s = m.section(form.GridSection, 'route', t('Services'));
+		s = m.section(form.GridSection, 'route', _('Services'));
 		s.anonymous = true;
 		s.addremove = true;
 		s.sortable = true;
 		s.nodescriptions = true;
-		s.addbtntitle = t('Add service');
+		s.addbtntitle = _('Add service');
 
-		o = s.option(form.Flag, 'enabled', t('Enabled'));
+		o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
 		o.modalonly = true;
 
-		o = s.option(form.Value, 'name', t('Service name'));
-		o.placeholder = t('My service');
+		o = s.option(form.Value, 'name', _('Service name'));
+		o.placeholder = _('My service');
 		o.rmempty = true;
 		o.modalonly = true;
 
-		o = s.option(form.ListValue, 'kind', t('Service type'));
-		o.value('web', t('Web (HTTP + HTTPS)'));
-		o.value('ssh', t('SSH'));
-		o.value('rdp', t('Remote Desktop'));
-		o.value('custom', t('Custom TCP'));
+		o = s.option(form.ListValue, 'kind', _('Service type'));
+		o.value('web', _('Web (HTTP + HTTPS)'));
+		o.value('ssh', _('SSH'));
+		o.value('rdp', _('Remote Desktop'));
+		o.value('custom', _('Custom TCP'));
 		o.default = 'web';
 		o.rmempty = false;
 		o.modalonly = true;
 
-		o = s.option(form.Value, 'host', t('Domain'));
+		o = s.option(form.Value, 'host', _('Domain'));
 		o.placeholder = 'example.org';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'web');
 
-		o = s.option(form.Value, 'backend_host', t('Destination host'));
+		o = s.option(form.Value, 'backend_host', _('Destination host'));
 		o.placeholder = '192.0.2.10';
 		o.rmempty = false;
 		o.modalonly = true;
 
-		o = s.option(form.Flag, 'web_http', t('Publish HTTP'));
+		o = s.option(form.Flag, 'web_http', _('Publish HTTP'));
 		o.default = '1';
 		o.modalonly = true;
 		o.depends('kind', 'web');
 
-		o = s.option(form.Value, 'backend_http_port', t('Destination HTTP port'));
+		o = s.option(form.Value, 'backend_http_port', _('Destination HTTP port'));
 		o.datatype = 'port';
 		o.default = '80';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends({ kind: 'web', web_http: '1' });
 
-		o = s.option(form.Flag, 'web_https', t('Publish HTTPS'));
+		o = s.option(form.Flag, 'web_https', _('Publish HTTPS'));
 		o.default = '1';
 		o.modalonly = true;
 		o.depends('kind', 'web');
 
-		o = s.option(form.Value, 'backend_https_port', t('Destination HTTPS port'));
+		o = s.option(form.Value, 'backend_https_port', _('Destination HTTPS port'));
 		o.datatype = 'port';
 		o.default = '443';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends({ kind: 'web', web_https: '1' });
 
-		o = s.option(form.Value, 'ssh_listen_port', t('Public SSH port'));
+		o = s.option(form.Value, 'ssh_listen_port', _('Public SSH port'));
 		o.datatype = 'port';
 		o.default = '22';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'ssh');
 
-		o = s.option(form.Value, 'ssh_backend_port', t('Destination SSH port'));
+		o = s.option(form.Value, 'ssh_backend_port', _('Destination SSH port'));
 		o.datatype = 'port';
 		o.default = '22';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'ssh');
 
-		o = s.option(form.Value, 'rdp_listen_port', t('Public RDP port'));
+		o = s.option(form.Value, 'rdp_listen_port', _('Public RDP port'));
 		o.datatype = 'port';
 		o.default = '3389';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'rdp');
 
-		o = s.option(form.Value, 'rdp_backend_port', t('Destination RDP port'));
+		o = s.option(form.Value, 'rdp_backend_port', _('Destination RDP port'));
 		o.datatype = 'port';
 		o.default = '3389';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'rdp');
 
-		o = s.option(form.DynamicList, 'port_map', t('TCP port mappings'));
+		o = s.option(form.DynamicList, 'port_map', _('TCP port mappings'));
 		o.placeholder = '8443:443';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'custom');
 		o.validate = function(sectionId, value) {
-			return portMapIsValid(value) || t('Use the public:destination format, for example 8443:443.');
+			return portMapIsValid(value) || _('Use the public:destination format, for example 8443:443.');
 		};
 
-		o = s.option(form.DummyValue, '_status', t('Status'));
+		o = s.option(form.DummyValue, '_status', _('Status'));
 		o.modalonly = false;
 		o.textvalue = function(sectionId) {
 			var enabled = m.data.get('haproxy_manager', sectionId, 'enabled') != '0';
 			return E('span', {
 				'class': 'hm-state %s'.format(enabled ? 'hm-state-on' : 'hm-state-off')
-			}, t(enabled ? 'On' : 'Off'));
+			}, enabled ? _('On') : _('Off'));
 		};
 
-		o = s.option(form.DummyValue, '_service', t('Service'));
+		o = s.option(form.DummyValue, '_service', _('Service'));
 		o.modalonly = false;
 		o.textvalue = function(sectionId) {
 			var kind = routeKind(m, sectionId);
 			var name = m.data.get('haproxy_manager', sectionId, 'name') ||
-				m.data.get('haproxy_manager', sectionId, 'host') || kindLabel(t, kind);
+				m.data.get('haproxy_manager', sectionId, 'host') || kindLabel(kind);
 			var enabled = m.data.get('haproxy_manager', sectionId, 'enabled') != '0';
 
 			return E('div', { 'class': 'hm-service-cell' }, [
@@ -229,13 +227,13 @@ return view.extend({
 					E('strong', name),
 					E('span', {
 						'class': 'hm-state hm-mobile-only %s'.format(enabled ? 'hm-state-on' : 'hm-state-off')
-					}, t(enabled ? 'On' : 'Off'))
+					}, enabled ? _('On') : _('Off'))
 				]),
-				E('span', { 'class': 'hm-badge' }, kindLabel(t, kind))
+				E('span', { 'class': 'hm-badge' }, kindLabel(kind))
 			]);
 		};
 
-		o = s.option(form.DummyValue, '_endpoint', t('Public endpoint'));
+		o = s.option(form.DummyValue, '_endpoint', _('Public endpoint'));
 		o.modalonly = false;
 		o.textvalue = function(sectionId) {
 			var kind = routeKind(m, sectionId);
@@ -244,7 +242,7 @@ return view.extend({
 
 			if (kind == 'web' || kind == 'http' || kind == 'https' || kind == 'both') {
 				return E('div', { 'class': 'hm-endpoint' }, [
-					E('span', { 'class': 'hm-endpoint-value' }, host || t('Not set')),
+					E('span', { 'class': 'hm-endpoint-value' }, host || _('Not set')),
 					E('span', { 'class': 'hm-port-summary' }, ports.map(function(port) { return ':' + port; }).join(' + '))
 				]);
 			}
@@ -254,18 +252,18 @@ return view.extend({
 			}));
 		};
 
-		o = s.option(form.DummyValue, '_destination', t('Destination'));
+		o = s.option(form.DummyValue, '_destination', _('Destination'));
 		o.modalonly = false;
 		o.textvalue = function(sectionId) {
 			var kind = routeKind(m, sectionId);
-			var host = m.data.get('haproxy_manager', sectionId, 'backend_host') || t('Not set');
+			var host = m.data.get('haproxy_manager', sectionId, 'backend_host') || _('Not set');
 			var mappings = [];
 
 			if (kind == 'web') {
 				if (m.data.get('haproxy_manager', sectionId, 'web_http') != '0')
-					mappings.push(t('HTTP') + ' :' + (m.data.get('haproxy_manager', sectionId, 'backend_http_port') || '80'));
+					mappings.push(_('HTTP') + ' :' + (m.data.get('haproxy_manager', sectionId, 'backend_http_port') || '80'));
 				if (m.data.get('haproxy_manager', sectionId, 'web_https') != '0')
-					mappings.push(t('HTTPS') + ' :' + (m.data.get('haproxy_manager', sectionId, 'backend_https_port') || '443'));
+					mappings.push(_('HTTPS') + ' :' + (m.data.get('haproxy_manager', sectionId, 'backend_https_port') || '443'));
 			}
 			else if (kind == 'ssh')
 				mappings.push(':' + (m.data.get('haproxy_manager', sectionId, 'ssh_backend_port') || '22'));
@@ -282,7 +280,7 @@ return view.extend({
 			]);
 		};
 
-		o = s.option(form.DummyValue, '_firewall', t('Firewall'));
+		o = s.option(form.DummyValue, '_firewall', _('Firewall'));
 		o.modalonly = false;
 		o.textvalue = function(sectionId) {
 			var kind = routeKind(m, sectionId);
@@ -290,8 +288,8 @@ return view.extend({
 			var conflict = firewall.conflicts.some(function(item) {
 				return ports.some(function(port) { return specContains(item.ports, port); });
 			});
-			var state = firewall.enabled != '1' ? t('Manual') : conflict ? t('Conflict') :
-				(firewall.managed_rule == '1' || firewall.policy == 'ACCEPT' ? t('Ready') : t('Pending'));
+			var state = firewall.enabled != '1' ? _('Manual') : conflict ? _('Conflict') :
+				(firewall.managed_rule == '1' || firewall.policy == 'ACCEPT' ? _('Ready') : _('Pending'));
 
 			return E('span', {
 				'class': 'hm-state %s'.format(conflict ? 'hm-state-danger' : firewall.enabled == '1' ? 'hm-state-on' : 'hm-state-off')
@@ -303,14 +301,14 @@ return view.extend({
 				'id': 'haproxy-route-filter',
 				'class': 'cbi-input-text hm-filter',
 				'type': 'search',
-				'placeholder': t('Filter services'),
-				'aria-label': t('Filter services')
+				'placeholder': _('Filter services'),
+				'aria-label': _('Filter services')
 			});
 			var countNode = E('span', { 'class': 'hm-route-count' });
 			var emptyNode = E('p', {
 				'class': 'alert-message notice hm-filter-empty',
 				'hidden': ''
-			}, t('No matching services'));
+			}, _('No matching services'));
 			var toolbar = E('div', { 'class': 'hm-toolbar' }, [ filterInput, countNode ]);
 			var section = node.querySelector('.cbi-section');
 
@@ -325,7 +323,7 @@ return view.extend({
 					visible += match ? 1 : 0;
 				}
 
-				countNode.textContent = t('%d services').format(visible);
+				countNode.textContent = _('%d services').format(visible);
 				emptyNode.hidden = visible > 0 || !query;
 			}
 
@@ -341,9 +339,9 @@ return view.extend({
 
 			if (firewall.conflicts.length) {
 				node.insertBefore(E('div', { 'class': 'alert-message warning hm-inline-alert' }, [
-					E('strong', t('Firewall conflict detected.')),
+					E('strong', _('Firewall conflict detected.')),
 					' ',
-					E('a', { 'href': L.url('admin/services/haproxy-manager/settings') }, t('Review firewall settings'))
+					E('a', { 'href': L.url('admin/services/haproxy-manager/settings') }, _('Review firewall settings'))
 				]), node.firstChild.nextSibling);
 			}
 
@@ -361,13 +359,13 @@ return view.extend({
 						}).then(function(r) {
 							var plan = parseFirewall(r.stdout);
 							hmUi.notify(plan.conflicts.length ?
-								t('Configuration is valid. Firewall conflicts: %d').format(plan.conflicts.length) :
-								t('Configuration and firewall are ready.'), plan.conflicts.length ? 'warning' : 'info');
+								_('Configuration is valid. Firewall conflicts: %d').format(plan.conflicts.length) :
+								_('Configuration and firewall are ready.'), plan.conflicts.length ? 'warning' : 'info');
 						}).catch(function(err) {
 							hmUi.notifyError(err);
 						});
 					})
-				}, t('Check configuration')),
+				}, _('Check configuration')),
 				E('button', {
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
@@ -375,13 +373,13 @@ return view.extend({
 						return m.save().then(function() {
 							return fs.exec('/usr/libexec/haproxy-manager/apply', []);
 						}).then(function(r) {
-							hmUi.notify(r.stdout || t('Applied'), 'info');
+							hmUi.notify(r.stdout || _('Applied'), 'info');
 							window.setTimeout(function() { window.location.reload(); }, 900);
 						}).catch(function(err) {
 							hmUi.notifyError(err);
 						});
 					})
-				}, t('Apply changes'))
+				}, _('Apply changes'))
 			]));
 
 			updateFilter();

@@ -21,6 +21,8 @@ for `/etc/haproxy.cfg`.
 - Responsive LuCI views built from standard theme classes.
 - English base package with optional Russian, Spanish, Korean, Japanese, and
   Simplified Chinese packages.
+- Native LuCI packaging and PO catalogs compatible with the official
+  `openwrt/luci` build system and Weblate.
 
 HAProxy does not proxy UDP. Continue to use OpenWrt firewall redirects for UDP
 port forwarding.
@@ -109,6 +111,10 @@ and a weekly schedule. Tags matching `v*` create a GitHub Release containing:
 - individual base and language packages;
 - separate IPK and APK ZIP bundles;
 - installation instructions and SHA-256 checksums.
+
+The SDK must contain the matching LuCI feed sources. The build helper stages
+the application under `feeds/luci/applications/` so the same `luci.mk` used by
+the official LuCI repository builds both the base and translation packages.
 
 ## Configuration safety
 

@@ -9,14 +9,13 @@ import subprocess
 import sys
 import tarfile
 
+from i18n import LANGUAGES, parse_po
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "luci-app-haproxy-manager"
 VIEWS = PACKAGE / "htdocs" / "luci-static" / "resources" / "view" / "haproxy-manager"
-I18N = PACKAGE / "i18n"
 DIST = ROOT / "dist"
-LANGS = ("ru", "es", "ko", "ja", "zh-cn")
-DYNAMIC_TRANSLATIONS = {"On", "Off", "Running", "Stopped"}
 
 
 def fail(message):
@@ -25,14 +24,25 @@ def fail(message):
 
 
 def translation_keys():
-    pattern = re.compile(r"(?<![A-Za-z0-9_])t\(\s*(['\"])(.*?)\1\s*\)")
-    keys = set(DYNAMIC_TRANSLATIONS)
+    pattern = re.compile(r"(?<![A-Za-z0-9_])_\(\s*(['\"])(.*?)\1\s*\)")
+    keys = set()
 
     for path in VIEWS.glob("*.js"):
         keys.update(match.group(2) for match in pattern.finditer(path.read_text(encoding="utf-8")))
 
-    menu = json.loads((PACKAGE / "root" / "usr" / "share" / "luci" / "menu.d" / "luci-app-haproxy-manager.json").read_text(encoding="utf-8"))
-    keys.update(item["title"] for item in menu.values() if "title" in item)
+    for path in (PACKAGE / "root" / "usr" / "share").rglob("*.json"):
+        def collect(value):
+            if isinstance(value, dict):
+                for name, item in value.items():
+                    if name in ("title", "description") and isinstance(item, str):
+                        keys.add(item)
+                    else:
+                        collect(item)
+            elif isinstance(value, list):
+                for item in value:
+                    collect(item)
+
+        collect(json.loads(path.read_text(encoding="utf-8")))
     return keys
 
 
@@ -40,17 +50,17 @@ def check_translations():
     required = translation_keys()
     errors = 0
 
-    for lang in LANGS:
-        path = I18N / lang / "www" / "luci-static" / "resources" / "i18n" / f"haproxy-manager.{lang}.json"
+    for po_language, _, _ in LANGUAGES:
+        path = PACKAGE / "po" / po_language / "haproxy-manager.po"
         try:
-            catalog = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+            catalog = parse_po(path)
+        except (OSError, SyntaxError, ValueError) as exc:
             errors += fail(f"cannot read {path.relative_to(ROOT)}: {exc}")
             continue
 
         missing = sorted(required - set(catalog))
         if missing:
-            errors += fail(f"{lang} translation is missing: {', '.join(missing)}")
+            errors += fail(f"{po_language} translation is missing: {', '.join(missing)}")
 
     return errors
 
@@ -124,9 +134,9 @@ def check_package_contents():
     if missing:
         errors += fail(f"base ipk is missing payload files: {', '.join(missing)}")
 
-    for lang in LANGS:
-        if not list(DIST.glob(f"luci-i18n-haproxy-manager-{lang}_*.ipk")):
-            errors += fail(f"missing {lang} translation ipk")
+    for _, package_language, _ in LANGUAGES:
+        if not list(DIST.glob(f"luci-i18n-haproxy-manager-{package_language}_*.ipk")):
+            errors += fail(f"missing {package_language} translation ipk")
 
     return errors
 

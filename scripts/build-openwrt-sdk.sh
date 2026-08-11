@@ -9,12 +9,22 @@ fi
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 PKG_SRC="$ROOT/luci-app-haproxy-manager"
-PKG_DST="$SDK/package/luci-app-haproxy-manager"
+LUCI_FEED="$SDK/feeds/luci"
+PKG_DST="$LUCI_FEED/applications/luci-app-haproxy-manager"
+PKG_LINK="$SDK/package/feeds/luci/luci-app-haproxy-manager"
 DIST="$ROOT/dist"
+
+if [ ! -f "$LUCI_FEED/luci.mk" ]; then
+	echo "The SDK does not contain the LuCI feed sources: $LUCI_FEED" >&2
+	exit 2
+fi
 
 rm -rf "$PKG_DST"
 mkdir -p "$(dirname "$PKG_DST")"
 cp -R "$PKG_SRC" "$PKG_DST"
+rm -rf "$PKG_LINK"
+mkdir -p "$(dirname "$PKG_LINK")"
+ln -s "../../../feeds/luci/applications/luci-app-haproxy-manager" "$PKG_LINK"
 mkdir -p "$DIST"
 
 cd "$SDK"

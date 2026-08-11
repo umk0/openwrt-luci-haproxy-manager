@@ -1,4 +1,5 @@
 /.audit/
+/.build/
 /dist/
 /openwrt-sdk-*/
 /openwrt-sdk-*.tar.*

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 - 2026-08-11
+
+- Adopt the native OpenWrt LuCI `luci.mk` packaging layout.
+- Replace the custom browser-side JSON translator with standard LuCI `_()`
+  translations and PO catalogs compatible with Weblate.
+- Build standalone language packages from the same PO sources used upstream.
+
 ## 0.4.1 - 2026-08-11
 
 - Mark the base package as architecture-independent in the OpenWrt package
