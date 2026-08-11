@@ -2,12 +2,26 @@
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	margin: 0 0 1rem;
+	margin: 0 0 1.25rem;
 }
 
 .hm-filter {
+	appearance: none;
 	box-sizing: border-box;
 	width: min(100%, 28rem);
+	min-height: 2.5rem;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--border-color-medium, rgba(128, 128, 128, 0.45));
+	border-radius: 4px;
+	outline: 0;
+	background: var(--background-color-high, rgba(128, 128, 128, 0.06));
+	color: inherit;
+	font: inherit;
+}
+
+.hm-filter:focus {
+	border-color: var(--primary-color-medium, currentColor);
+	box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.18);
 }
 
 .hm-route-count {
@@ -18,6 +32,7 @@
 .hm-endpoint {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	min-width: 0;
 }
@@ -25,6 +40,28 @@
 .hm-endpoint-value,
 .hm-destination {
 	overflow-wrap: anywhere;
+}
+
+.hm-port-summary {
+	opacity: 0.72;
+	white-space: nowrap;
+}
+
+.hm-port-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+
+.hm-port-list code,
+.hm-destination code {
+	white-space: nowrap;
+}
+
+.hm-destination {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
 }
 
 .hm-badge,
@@ -46,6 +83,11 @@
 	opacity: 0.6;
 }
 
+.hm-state-danger {
+	border-color: var(--error-color, #b94a48);
+	color: var(--error-color, #b94a48);
+}
+
 .hm-filter-empty {
 	margin-top: 1rem;
 }
@@ -58,8 +100,16 @@
 .hm-route-name {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	min-width: 0;
+}
+
+.hm-service-cell {
+	display: flex;
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 0.4rem;
 }
 
 .hm-mobile-only {
@@ -77,6 +127,10 @@
 	margin: 0;
 	white-space: pre-wrap;
 	word-break: break-word;
+}
+
+.hm-inline-alert {
+	margin-bottom: 1rem;
 }
 
 .hm-status-grid {
@@ -113,6 +167,33 @@
 	white-space: nowrap;
 }
 
+.hm-section-heading {
+	margin-top: 2rem;
+}
+
+.hm-section-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.hm-section-title-row h3 {
+	margin: 0;
+}
+
+.hm-section-heading > p {
+	margin: 0.25rem 0 0.75rem;
+}
+
+.hm-backup-latest {
+	margin-left: 0.5rem;
+}
+
+.hm-backup-table .cbi-section-actions {
+	text-align: right;
+}
+
 .hm-raw-editor {
 	box-sizing: border-box;
 	width: 100%;
@@ -142,14 +223,18 @@
 		grid-template-columns: 1fr;
 	}
 
+	.hm-section-title-row {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.hm-section-title-row .cbi-button {
+		width: 100%;
+	}
+
 	.hm-actions > .btn,
 	.hm-actions > .cbi-button {
 		flex: 1 1 100%;
-	}
-
-	.hm-endpoint {
-		align-items: flex-start;
-		flex-direction: column;
 	}
 
 	.hm-mobile-only {
@@ -181,7 +266,7 @@
 		content: none !important;
 	}
 
-	.hm-route-table .cbi-section-table-row[data-sid] > .td[data-name="_name"],
+	.hm-route-table .cbi-section-table-row[data-sid] > .td[data-name="_service"],
 	.hm-route-table .cbi-section-table-row[data-sid] > .td[data-name="_endpoint"] {
 		grid-column: 1 / -1;
 	}
@@ -196,15 +281,13 @@
 		grid-column: 1 / -1;
 	}
 
+	.hm-route-table .cbi-section-table-row[data-sid] > .td[data-name="_firewall"] {
+		grid-column: 1 / -1;
+	}
+
 	.hm-route-table .cbi-section-table-row[data-sid] > .cbi-section-actions > div {
 		display: flex;
 		gap: 0.35rem;
-	}
-
-	.hm-route-table .hm-endpoint {
-		align-items: center;
-		flex-direction: row;
-		flex-wrap: wrap;
 	}
 
 	.hm-raw-editor {

@@ -5,7 +5,7 @@ enabled="$(uci_get main enabled 0)"
 wan="$(wan_ip 2>/dev/null || echo unknown)"
 version="not-available"
 service="stopped"
-last_backup="none"
+backup_count=0
 
 if command -v haproxy >/dev/null 2>&1; then
 	version="$(haproxy -v 2>/dev/null | sed -n '1s/^HAProxy version \([^ ]*\).*/\1/p')"
@@ -16,15 +16,13 @@ if [ -x /etc/init.d/haproxy ] && /etc/init.d/haproxy status >/dev/null 2>&1; the
 	service="running"
 fi
 
-if [ -r "$(backup_dir)/LAST" ]; then
-	last_backup="$(cat "$(backup_dir)/LAST")"
-fi
+backup_count="$(/usr/libexec/haproxy-manager/backups 2>/dev/null | wc -l | tr -d ' ')"
 
 printf 'enabled\t%s\n' "$enabled"
 printf 'wan_ip\t%s\n' "$wan"
 printf 'version\t%s\n' "$version"
 printf 'service\t%s\n' "$service"
-printf 'last_backup\t%s\n' "$last_backup"
+printf 'backup_count\t%s\n' "$backup_count"
 
 netstat -lntp 2>/dev/null | awk '
 	NR > 2 && $6 == "LISTEN" && ($7 ~ /haproxy/ || $7 ~ /uhttpd/) {

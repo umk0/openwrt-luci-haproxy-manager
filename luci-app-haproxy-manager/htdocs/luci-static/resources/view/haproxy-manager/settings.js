@@ -18,9 +18,9 @@ return view.extend({
 		hmUi.ensureStyles();
 
 		m = new form.Map('haproxy_manager', t('HAProxy Settings'),
-			t('Configure listeners, LuCI binding, and backups.'));
+			t('Configure shared Web entry ports, router access, and firewall automation.'));
 
-		s = m.section(form.NamedSection, 'main', 'settings', t('Service'));
+		s = m.section(form.NamedSection, 'main', 'settings', t('HAProxy service'));
 		s.anonymous = true;
 
 		o = s.option(form.Flag, 'enabled', t('Enable managed configuration'));
@@ -31,57 +31,80 @@ return view.extend({
 		o.default = 'auto';
 		o.rmempty = false;
 
-		s = m.section(form.NamedSection, 'main', 'settings', t('Listeners'));
+		s = m.section(form.NamedSection, 'main', 'settings', t('Web entry ports'));
 		s.anonymous = true;
+		s.description = t('Every Web service shares these public ports. SSH, Remote Desktop, and Custom TCP services use the ports configured on each service.');
 
-		o = s.option(form.Flag, 'enable_http', t('HTTP listener'));
-		o.default = '1';
-
-		o = s.option(form.Value, 'http_port', t('HTTP port'));
+		o = s.option(form.Value, 'http_port', t('Public HTTP port'));
 		o.datatype = 'port';
 		o.default = '80';
-		o.depends('enable_http', '1');
+		o.rmempty = false;
 
-		o = s.option(form.Flag, 'enable_https_passthrough', t('HTTPS SNI passthrough'));
-		o.default = '0';
-
-		o = s.option(form.Value, 'https_port', t('HTTPS port'));
+		o = s.option(form.Value, 'https_port', t('Public HTTPS port'));
 		o.datatype = 'port';
 		o.default = '443';
-		o.depends('enable_https_passthrough', '1');
+		o.rmempty = false;
 
-		s = m.section(form.NamedSection, 'main', 'settings', t('LuCI access'));
+		s = m.section(form.NamedSection, 'main', 'settings', t('Router access'));
 		s.anonymous = true;
 
-		o = s.option(form.Flag, 'manage_uhttpd_bind', t('Bind LuCI to LAN only'));
+		o = s.option(form.Flag, 'manage_uhttpd_bind', t('Keep LuCI on the LAN address'));
 		o.default = '0';
-		o.description = t('Allows HAProxy to use the WAN address on HTTP and HTTPS ports.');
+		o.description = t('Recommended when HAProxy uses public ports 80 or 443. LuCI remains available from the local network.');
 
 		o = s.option(form.Value, 'lan_bind_ip', t('LuCI LAN address'));
 		o.placeholder = t('Automatic');
 		o.default = 'auto';
 		o.depends('manage_uhttpd_bind', '1');
 
-		s = m.section(form.NamedSection, 'main', 'settings', t('Backups'));
+		s = m.section(form.NamedSection, 'main', 'settings', t('Firewall automation'));
 		s.anonymous = true;
 
-		o = s.option(form.Value, 'backup_dir', t('Backup directory'));
-		o.default = '/root/haproxy-manager-backups';
+		o = s.option(form.Flag, 'manage_firewall', t('Open HAProxy ports on WAN automatically'));
+		o.default = '0';
+		o.description = t('Creates and updates only firewall rules owned by HAProxy Manager.');
+
+		o = s.option(form.Value, 'firewall_zone', t('WAN firewall zone'));
+		o.default = 'wan';
 		o.rmempty = false;
+		o.depends('manage_firewall', '1');
+
+		o = s.option(form.ListValue, 'firewall_conflict_mode', t('Existing port-forward conflicts'));
+		o.value('warn', t('Stop and show conflicts'));
+		o.value('disable', t('Disable conflicting forwards during apply'));
+		o.default = 'warn';
+		o.rmempty = false;
+		o.depends('manage_firewall', '1');
+
+		s = m.section(form.NamedSection, 'main', 'settings', t('Recovery'));
+		s.anonymous = true;
+		s.description = t('A restorable snapshot is created before migration and every apply.');
 
 		return m.render().then(function(node) {
+			var recoverySection = node.querySelectorAll('.cbi-section');
+			var lastSection = recoverySection.length ? recoverySection[recoverySection.length - 1] : null;
+
+			if (lastSection) {
+				lastSection.appendChild(E('p', [
+					E('a', {
+						'class': 'btn cbi-button',
+						'href': L.url('admin/services/haproxy-manager/status') + '#recovery'
+					}, t('Open recovery'))
+				]));
+			}
+
 			node.appendChild(E('div', { 'class': 'cbi-page-actions hm-actions' }, [
 				E('button', {
 					'class': 'btn cbi-button cbi-button-save',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
 						return m.save().then(function() {
-							hmUi.notify(t('Saved'), 'info');
+							hmUi.notify(t('Settings saved'), 'info');
 						}).catch(function(err) {
 							hmUi.notifyError(err);
 						});
 					})
-				}, t('Save only')),
+				}, t('Save settings')),
 				E('button', {
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
@@ -94,7 +117,7 @@ return view.extend({
 							hmUi.notifyError(err);
 						});
 					})
-				}, t('Save & apply'))
+				}, t('Save and apply'))
 			]));
 
 			return node;

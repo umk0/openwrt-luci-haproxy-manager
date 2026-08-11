@@ -1,17 +1,19 @@
 # LuCI HAProxy Manager
 
-LuCI application for routing HTTP, HTTPS SNI, and arbitrary TCP ports through
-HAProxy on OpenWrt. It keeps the common workflow in UCI while retaining an
-expert editor for `/etc/haproxy.cfg`.
+LuCI application for publishing Web and TCP services through HAProxy on
+OpenWrt. The interface uses service presets while retaining an expert editor
+for `/etc/haproxy.cfg`.
 
 ## Features
 
-- HTTP routing by the `Host` header.
-- HTTPS passthrough routing by TLS SNI without terminating TLS on the router.
-- Combined HTTP and HTTPS routes for one domain.
-- Plain TCP forwarding from any WAN port to a backend host and port.
+- One Web service publishes HTTP Host and HTTPS SNI together, with separate
+  backend ports.
+- SSH and Remote Desktop presets with sensible port defaults.
+- Custom TCP services with multiple `public:destination` port mappings.
+- Optional WAN firewall rule synchronization and conflict detection.
 - Syntax validation before HAProxy restarts.
-- Backups and one-click rollback for HAProxy, firewall, and uHTTPd state.
+- Named recovery points with one-click restore for HAProxy, firewall, and
+  uHTTPd state.
 - Optional uHTTPd binding to the LAN address so HAProxy can own WAN ports 80/443.
 - Responsive LuCI views built from standard theme classes.
 - English base package with optional Russian, Spanish, Korean, Japanese, and
@@ -54,20 +56,22 @@ apk add --allow-untrusted /tmp/luci-i18n-haproxy-manager-ru-*.apk
 Local packages are unsigned, which is why `--allow-untrusted` is required for
 `apk`. Packages from a signed repository should be installed without that flag.
 
-The application appears under `Services -> HAProxy`. The Routes page is the
+The application appears under `Services -> HAProxy`. The Services page is the
 default screen.
 
 ## Routing modes
 
-| Mode | Public match | Backend |
+| Service | Public match | Backend |
 | --- | --- | --- |
-| HTTP Host | Domain on the configured HTTP listener | Host and port |
-| HTTPS SNI | Domain in the TLS ClientHello | Host and port |
-| HTTP + HTTPS | Same domain on both shared listeners | Host and port |
-| TCP | Dedicated WAN listen port | Host and port |
+| Web | One domain on shared HTTP and HTTPS ports | Host with separate HTTP and HTTPS ports |
+| SSH | Dedicated public TCP port | Host and SSH port |
+| Remote Desktop | Dedicated public TCP port | Host and RDP port |
+| Custom TCP | One or more dedicated public TCP ports | Host and mapped ports |
 
-Each TCP route needs a unique listen port. The generator rejects conflicts with
-the shared HTTP/HTTPS listeners and with other TCP routes.
+Each public TCP port must be unique. The generator rejects conflicts with the
+shared Web listeners and with other TCP services. Firewall automation manages
+only rules marked as owned by HAProxy Manager. Existing redirects are reported
+or disabled during apply according to the selected conflict policy.
 
 ## Build
 
@@ -111,7 +115,8 @@ Emergency rollback over SSH:
 /usr/libexec/haproxy-manager/rollback last
 ```
 
-Backups are stored in `/root/haproxy-manager-backups` by default.
+Backups are stored in `/root/haproxy-manager-backups` by default. Only the seven
+newest recovery points are retained; older snapshots are removed automatically.
 
 ## Development
 

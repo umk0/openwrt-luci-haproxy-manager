@@ -2,17 +2,28 @@
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
 
+/usr/libexec/haproxy-manager/migrate >/dev/null
 /usr/libexec/haproxy-manager/generate "$TMP_CFG" >/dev/null
 /usr/libexec/haproxy-manager/validate "$TMP_CFG"
 
+if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
+	/usr/libexec/haproxy-manager/firewall-sync --check >/dev/null
+fi
+
 BACKUP_DIR="$(/usr/libexec/haproxy-manager/backup)"
-echo "Backup: $BACKUP_DIR"
+APPLIED=0
+
+restore_on_error() {
+	[ "$APPLIED" = 1 ] && return 0
+	/usr/libexec/haproxy-manager/rollback "$(basename "$BACKUP_DIR")" >/dev/null 2>&1 || true
+}
+trap restore_on_error EXIT
 
 MANAGE_UHTTPD="$(uci_get main manage_uhttpd_bind 0)"
 LAN_BIND_IP="$(lan_ip || true)"
 
 if [ "$MANAGE_UHTTPD" = 1 ]; then
-	[ -n "$LAN_BIND_IP" ] || { echo "Cannot detect LAN IPv4 address. Set LuCI LAN IP manually." >&2; exit 1; }
+	[ -n "$LAN_BIND_IP" ] || { echo "Cannot detect LAN IPv4 address. Set the LuCI LAN address manually." >&2; exit 1; }
 	uci -q delete uhttpd.main.listen_http || true
 	uci -q delete uhttpd.main.listen_https || true
 	uci add_list uhttpd.main.listen_http="$LAN_BIND_IP:80"
@@ -20,9 +31,15 @@ if [ "$MANAGE_UHTTPD" = 1 ]; then
 	uci commit uhttpd
 fi
 
+if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
+	/usr/libexec/haproxy-manager/firewall-sync
+fi
+
 cp "$TMP_CFG" "$HAPROXY_CFG"
 /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 /etc/init.d/haproxy enable >/dev/null 2>&1 || true
 /etc/init.d/haproxy restart
 
-echo "Applied successfully"
+APPLIED=1
+trap - EXIT
+echo "Applied successfully. Backup: $(basename "$BACKUP_DIR")"

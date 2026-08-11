@@ -7,19 +7,20 @@ BASE="$(backup_dir)"
 
 if [ "$TARGET" = last ]; then
 	[ -f "$BASE/LAST" ] || { echo "No LAST backup marker found" >&2; exit 1; }
-	TARGET="$(cat "$BASE/LAST")"
+	TARGET="$(basename "$(cat "$BASE/LAST")")"
 fi
 
-[ -d "$TARGET" ] || { echo "Backup directory not found: $TARGET" >&2; exit 1; }
+printf '%s' "$TARGET" | grep -Eq '^[0-9]{8}-[0-9]{6}$' || { echo "Invalid backup identifier" >&2; exit 1; }
+TARGET_DIR="$BASE/$TARGET"
+[ -d "$TARGET_DIR" ] || { echo "Backup not found: $TARGET" >&2; exit 1; }
 
-[ -f "$TARGET/firewall" ] && cp "$TARGET/firewall" /etc/config/firewall
-[ -f "$TARGET/uhttpd" ] && cp "$TARGET/uhttpd" /etc/config/uhttpd
-[ -f "$TARGET/haproxy_manager" ] && cp "$TARGET/haproxy_manager" /etc/config/haproxy_manager
-[ -f "$TARGET/haproxy.cfg" ] && cp "$TARGET/haproxy.cfg" "$HAPROXY_CFG"
+[ -f "$TARGET_DIR/firewall" ] && cp "$TARGET_DIR/firewall" /etc/config/firewall
+[ -f "$TARGET_DIR/uhttpd" ] && cp "$TARGET_DIR/uhttpd" /etc/config/uhttpd
+[ -f "$TARGET_DIR/haproxy_manager" ] && cp "$TARGET_DIR/haproxy_manager" /etc/config/haproxy_manager
+[ -f "$TARGET_DIR/haproxy.cfg" ] && cp "$TARGET_DIR/haproxy.cfg" "$HAPROXY_CFG"
 
 /etc/init.d/firewall restart >/dev/null 2>&1 || true
 /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 /etc/init.d/haproxy restart >/dev/null 2>&1 || true
 
-echo "Rolled back from $TARGET"
-
+echo "Restored backup $TARGET"

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 - 2026-08-11
+
+- Keep only the seven newest recovery points and prune older snapshots automatically.
+- Replace protocol records with service presets for Web, SSH, Remote Desktop,
+  and custom TCP mappings.
+- Combine HTTP and HTTPS into one Web service with separate backend ports.
+- Migrate compatible legacy HTTP/HTTPS pairs without changing routing behavior.
+- Add optional firewall rule synchronization and conflict detection.
+- Replace backup paths with named recovery points and one-click restore.
+- Clarify shared Web listeners versus per-service TCP listeners.
+- Restyle the service filter and compact service table across LuCI themes.
+
 ## 0.3.0 - 2026-08-11
 
 - Make routes the primary screen and move listener settings to a separate page.

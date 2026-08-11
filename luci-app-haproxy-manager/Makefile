@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-haproxy-manager
-PKG_VERSION:=0.3.0
-PKG_RELEASE:=4
+PKG_VERSION:=0.4.0
+PKG_RELEASE:=2
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=HAProxy Manager contributors
 PKGARCH:=all
@@ -42,6 +42,7 @@ define Package/luci-app-haproxy-manager/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
 chmod +x /usr/libexec/haproxy-manager/* 2>/dev/null || true
+/usr/libexec/haproxy-manager/migrate >/dev/null 2>&1 || logger -t haproxy-manager "Configuration migration failed"
 rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
 exit 0

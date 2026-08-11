@@ -104,6 +104,10 @@ def check_package_contents():
 
     required_payload = {
         "./usr/libexec/haproxy-manager/apply",
+        "./usr/libexec/haproxy-manager/backups",
+        "./usr/libexec/haproxy-manager/firewall-plan",
+        "./usr/libexec/haproxy-manager/firewall-sync",
+        "./usr/libexec/haproxy-manager/migrate",
         "./usr/libexec/haproxy-manager/status",
         "./www/luci-static/resources/haproxy-manager/style.css",
         "./www/luci-static/resources/view/haproxy-manager/routes.js",

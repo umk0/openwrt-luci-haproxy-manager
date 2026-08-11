@@ -20,7 +20,7 @@
     }
   },
   "admin/services/haproxy-manager/routes": {
-    "title": "Routes",
+    "title": "Services",
     "i18n": "haproxy-manager",
     "order": 10,
     "action": {
