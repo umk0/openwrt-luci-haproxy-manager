@@ -12,7 +12,7 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 PKG_SRC="$ROOT/luci-app-haproxy-manager"
 LUCI_FEED="$SDK/feeds/luci"
 PKG_DST="$LUCI_FEED/applications/luci-app-haproxy-manager"
-PKG_LINK="$SDK/package/feeds/luci/luci-app-haproxy-manager"
+LINK_DIR="$SDK/package/feeds/luci"
 DIST="$ROOT/dist"
 
 if [ ! -f "$LUCI_FEED/luci.mk" ]; then
@@ -31,9 +31,11 @@ fi
 rm -rf "$PKG_DST"
 mkdir -p "$(dirname "$PKG_DST")"
 cp -R "$PKG_SRC" "$PKG_DST"
-rm -rf "$PKG_LINK"
-mkdir -p "$(dirname "$PKG_LINK")"
-ln -s "../../../feeds/luci/applications/luci-app-haproxy-manager" "$PKG_LINK"
+mkdir -p "$LINK_DIR"
+rm -rf "$LINK_DIR/luci-app-haproxy-manager" "$LINK_DIR/luci-base" "$LINK_DIR/csstidy"
+ln -s "../../../feeds/luci/applications/luci-app-haproxy-manager" "$LINK_DIR/luci-app-haproxy-manager"
+ln -s "../../../feeds/luci/modules/luci-base" "$LINK_DIR/luci-base"
+ln -s "../../../feeds/luci/contrib/package/csstidy" "$LINK_DIR/csstidy"
 mkdir -p "$DIST"
 
 cd "$SDK"
