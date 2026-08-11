@@ -1,11 +1,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-haproxy-manager
-PKG_VERSION:=0.4.0
-PKG_RELEASE:=2
+PKG_VERSION:=0.4.1
+PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=Philipp <job@umk0.ru>
-PKGARCH:=all
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -15,6 +14,7 @@ define Package/luci-app-haproxy-manager
   SUBMENU:=3. Applications
   TITLE:=LuCI HAProxy Manager
   DEPENDS:=+luci-base +rpcd +rpcd-mod-file +haproxy
+  PKGARCH:=all
 endef
 
 define Package/luci-app-haproxy-manager/description

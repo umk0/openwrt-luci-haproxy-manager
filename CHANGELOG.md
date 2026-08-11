@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 - 2026-08-11
+
+- Mark the base package as architecture-independent in the OpenWrt package
+  definition, producing one `all` IPK for every supported processor.
+- Update GitHub artifact handling to its current Node.js 24 runtime.
+
 ## 0.4.0 - 2026-08-11
 
 - Keep only the seven newest recovery points and prune older snapshots automatically.

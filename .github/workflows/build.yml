@@ -93,12 +93,12 @@ jobs:
       contents: write
     steps:
       - name: Download OpenWrt 24.10 packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: packages-24.10-x86-64
           path: release/ipk
       - name: Download OpenWrt 25.12 packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: packages-25.12-x86-64
           path: release/apk
