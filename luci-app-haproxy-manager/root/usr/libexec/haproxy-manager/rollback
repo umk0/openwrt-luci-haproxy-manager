@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+. /usr/libexec/haproxy-manager/common.sh
+
+TARGET="${1:-last}"
+BASE="$(backup_dir)"
+
+if [ "$TARGET" = last ]; then
+	[ -f "$BASE/LAST" ] || { echo "No LAST backup marker found" >&2; exit 1; }
+	TARGET="$(cat "$BASE/LAST")"
+fi
+
+[ -d "$TARGET" ] || { echo "Backup directory not found: $TARGET" >&2; exit 1; }
+
+[ -f "$TARGET/firewall" ] && cp "$TARGET/firewall" /etc/config/firewall
+[ -f "$TARGET/uhttpd" ] && cp "$TARGET/uhttpd" /etc/config/uhttpd
+[ -f "$TARGET/haproxy_manager" ] && cp "$TARGET/haproxy_manager" /etc/config/haproxy_manager
+[ -f "$TARGET/haproxy.cfg" ] && cp "$TARGET/haproxy.cfg" "$HAPROXY_CFG"
+
+/etc/init.d/firewall restart >/dev/null 2>&1 || true
+/etc/init.d/uhttpd restart >/dev/null 2>&1 || true
+/etc/init.d/haproxy restart >/dev/null 2>&1 || true
+
+echo "Rolled back from $TARGET"
+

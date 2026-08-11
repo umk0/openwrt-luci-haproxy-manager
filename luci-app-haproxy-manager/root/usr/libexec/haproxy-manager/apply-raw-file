@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+. /usr/libexec/haproxy-manager/common.sh
+
+SRC="${1:-}"
+case "$SRC" in
+	/tmp/haproxy-manager-*) ;;
+	*) echo "Refusing unsafe raw config path: $SRC" >&2; exit 1 ;;
+esac
+
+[ -f "$SRC" ] || { echo "Raw config file not found: $SRC" >&2; exit 1; }
+/usr/libexec/haproxy-manager/validate "$SRC"
+/usr/libexec/haproxy-manager/backup >/dev/null
+cp "$SRC" "$HAPROXY_CFG"
+/etc/init.d/haproxy restart
+echo "Raw HAProxy config applied"
+

@@ -1,0 +1,9 @@
+/.audit/
+/dist/
+/openwrt-sdk-*/
+/openwrt-sdk-*.tar.*
+/sdk-index.html
+__pycache__/
+*.py[cod]
+*.swp
+*~

@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+. /usr/libexec/haproxy-manager/common.sh
+
+BASE="$(backup_dir)"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+DIR="$BASE/$STAMP"
+
+mkdir -p "$DIR"
+[ -f /etc/config/firewall ] && cp /etc/config/firewall "$DIR/firewall"
+[ -f /etc/config/uhttpd ] && cp /etc/config/uhttpd "$DIR/uhttpd"
+[ -f /etc/config/haproxy_manager ] && cp /etc/config/haproxy_manager "$DIR/haproxy_manager"
+[ -f "$HAPROXY_CFG" ] && cp "$HAPROXY_CFG" "$DIR/haproxy.cfg"
+
+printf '%s\n' "$DIR" > "$BASE/LAST"
+printf '%s\n' "$DIR"
+

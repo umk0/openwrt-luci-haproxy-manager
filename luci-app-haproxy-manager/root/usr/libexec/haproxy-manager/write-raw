@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+. /usr/libexec/haproxy-manager/common.sh
+
+TMP=/tmp/haproxy-manager-raw.$$
+trap 'rm -f "$TMP"' EXIT
+cat > "$TMP"
+/usr/libexec/haproxy-manager/validate "$TMP"
+/usr/libexec/haproxy-manager/backup >/dev/null
+cp "$TMP" "$HAPROXY_CFG"
+/etc/init.d/haproxy restart
+echo "Raw HAProxy config applied"
+

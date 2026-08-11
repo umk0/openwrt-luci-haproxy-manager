@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+CFG="${1:-/etc/haproxy.cfg}"
+if ! command -v haproxy >/dev/null 2>&1; then
+	echo "haproxy binary is not installed" >&2
+	exit 1
+fi
+
+haproxy -c -f "$CFG"
+

@@ -1,0 +1,50 @@
+name: Build packages
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ipk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check sources
+        run: python scripts/check.py
+      - name: Build ipk packages
+        run: python scripts/build-ipk.py
+      - name: Check package contents
+        run: python scripts/check.py --dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-ipk-packages
+          path: dist/*.ipk
+
+  apk:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      SDK_URL: https://downloads.openwrt.org/releases/25.12.5/targets/mediatek/mt7622/openwrt-sdk-25.12.5-mediatek-mt7622_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+      SDK_SHA256: 0bd25a391256dbe9ad1f9c6f313364b1f9eddcc0e280c829d644034981ad8306
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y zstd
+      - name: Download OpenWrt SDK
+        run: |
+          curl --fail --location --output /tmp/openwrt-sdk.tar.zst "$SDK_URL"
+          echo "$SDK_SHA256  /tmp/openwrt-sdk.tar.zst" | sha256sum --check
+          mkdir -p /tmp/openwrt-sdk
+          tar --zstd -xf /tmp/openwrt-sdk.tar.zst -C /tmp/openwrt-sdk
+      - name: Build apk packages
+        run: |
+          SDK_DIR="$(find /tmp/openwrt-sdk -mindepth 1 -maxdepth 1 -type d -name 'openwrt-sdk-*' | head -1)"
+          sh scripts/build-openwrt-sdk.sh "$SDK_DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-25.12-apk-packages
+          path: dist/*.apk

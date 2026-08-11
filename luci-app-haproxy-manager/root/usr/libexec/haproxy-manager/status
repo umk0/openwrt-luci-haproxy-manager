@@ -1,0 +1,33 @@
+#!/bin/sh
+. /usr/libexec/haproxy-manager/common.sh
+
+enabled="$(uci_get main enabled 0)"
+wan="$(wan_ip 2>/dev/null || echo unknown)"
+version="not-available"
+service="stopped"
+last_backup="none"
+
+if command -v haproxy >/dev/null 2>&1; then
+	version="$(haproxy -v 2>/dev/null | sed -n '1s/^HAProxy version \([^ ]*\).*/\1/p')"
+	[ -n "$version" ] || version="unknown"
+fi
+
+if [ -x /etc/init.d/haproxy ] && /etc/init.d/haproxy status >/dev/null 2>&1; then
+	service="running"
+fi
+
+if [ -r "$(backup_dir)/LAST" ]; then
+	last_backup="$(cat "$(backup_dir)/LAST")"
+fi
+
+printf 'enabled\t%s\n' "$enabled"
+printf 'wan_ip\t%s\n' "$wan"
+printf 'version\t%s\n' "$version"
+printf 'service\t%s\n' "$service"
+printf 'last_backup\t%s\n' "$last_backup"
+
+netstat -lntp 2>/dev/null | awk '
+	NR > 2 && $6 == "LISTEN" && ($7 ~ /haproxy/ || $7 ~ /uhttpd/) {
+		printf "listener\t%s\t%s\t%s\n", $1, $4, $7
+	}
+'
