@@ -21,7 +21,7 @@ jobs:
     name: Source and package checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -40,7 +40,7 @@ jobs:
       legacy_version: ${{ steps.versions.outputs.legacy_version }}
       modern_version: ${{ steps.versions.outputs.modern_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: versions
         name: Resolve latest patch releases
         run: python scripts/openwrt-releases.py --github-output "$GITHUB_OUTPUT"
@@ -54,7 +54,7 @@ jobs:
       max-parallel: 3
       matrix: ${{ fromJSON(needs.releases.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y zstd
       - name: Download and verify OpenWrt SDK
