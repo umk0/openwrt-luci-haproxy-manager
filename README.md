@@ -112,8 +112,8 @@ and a weekly schedule. Tags matching `v*` create a GitHub Release containing:
 - separate IPK and APK ZIP bundles;
 - installation instructions and SHA-256 checksums.
 
-The SDK must contain the matching LuCI feed sources. The build helper stages
-the application under `feeds/luci/applications/` so the same `luci.mk` used by
+The build helper fetches the matching official LuCI release branch and stages
+the application under `feeds/luci/applications/`. The same `luci.mk` used by
 the official LuCI repository builds both the base and translation packages.
 
 ## Configuration safety

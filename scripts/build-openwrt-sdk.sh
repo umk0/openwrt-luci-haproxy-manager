@@ -2,8 +2,9 @@
 set -eu
 
 SDK="${1:-}"
+LUCI_BRANCH="${2:-}"
 if [ -z "$SDK" ] || [ ! -d "$SDK" ]; then
-	echo "Usage: $0 /path/to/openwrt-sdk" >&2
+	echo "Usage: $0 /path/to/openwrt-sdk [openwrt-XX.XX]" >&2
 	exit 2
 fi
 
@@ -15,8 +16,16 @@ PKG_LINK="$SDK/package/feeds/luci/luci-app-haproxy-manager"
 DIST="$ROOT/dist"
 
 if [ ! -f "$LUCI_FEED/luci.mk" ]; then
-	echo "The SDK does not contain the LuCI feed sources: $LUCI_FEED" >&2
-	exit 2
+	if [ -z "$LUCI_BRANCH" ]; then
+		series="$(basename "$SDK" | sed -n 's/^openwrt-sdk-\([0-9][0-9]*\.[0-9][0-9]*\).*/\1/p')"
+		LUCI_BRANCH="openwrt-$series"
+	fi
+	if [ "$LUCI_BRANCH" = "openwrt-" ]; then
+		echo "Cannot determine the matching LuCI release branch for $SDK" >&2
+		exit 2
+	fi
+	rm -rf "$LUCI_FEED"
+	git clone --depth 1 --branch "$LUCI_BRANCH" https://github.com/openwrt/luci.git "$LUCI_FEED"
 fi
 
 rm -rf "$PKG_DST"

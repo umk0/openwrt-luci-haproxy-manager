@@ -74,7 +74,7 @@ jobs:
         run: |
           sdk_dir="$(find /tmp/openwrt-sdk -mindepth 1 -maxdepth 1 -type d -name 'openwrt-sdk-*' | head -n1)"
           test -n "$sdk_dir"
-          sh scripts/build-openwrt-sdk.sh "$sdk_dir"
+          sh scripts/build-openwrt-sdk.sh "$sdk_dir" "openwrt-${{ matrix.series }}"
       - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.series }}-${{ matrix.target_id }}
