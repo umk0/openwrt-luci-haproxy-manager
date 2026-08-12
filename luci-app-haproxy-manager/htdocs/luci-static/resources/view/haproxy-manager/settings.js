@@ -2,8 +2,8 @@
 /* global hmUi */
 'require view';
 'require form';
-'require fs';
 'require ui';
+'require uci';
 'require haproxy-manager.ui as hmUi';
 
 return view.extend({
@@ -93,7 +93,9 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-save',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save().then(function() {
+						return m.save(null, true).then(function() {
+							return uci.apply();
+						}).then(function() {
 							hmUi.notify(_('Settings saved'), 'info');
 						}).catch(function(err) {
 							hmUi.notifyError(err);
@@ -104,8 +106,10 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save().then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/apply', []);
+						return m.save(null, true).then(function() {
+							return uci.apply();
+						}).then(function() {
+							return hmUi.exec('/usr/libexec/haproxy-manager/apply', []);
 						}).then(function(r) {
 							hmUi.notify(r.stdout || _('Applied'), 'info');
 						}).catch(function(err) {

@@ -6,7 +6,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_VERSION:=0.5.0
+PKG_VERSION:=0.5.1
 PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=Philipp Shklyaev <job@umk0.ru>
@@ -25,7 +25,8 @@ define Package/luci-app-haproxy-manager/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
 	/usr/libexec/haproxy-manager/migrate >/dev/null 2>&1 || logger -t haproxy-manager "Configuration migration failed"
-	rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
+	rm -f /tmp/luci-indexcache.* 2>/dev/null || true
+	rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 }
 exit 0
@@ -34,7 +35,8 @@ endef
 define Package/luci-app-haproxy-manager/postrm
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
-	rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
+	rm -f /tmp/luci-indexcache.* 2>/dev/null || true
+	rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 }
 exit 0

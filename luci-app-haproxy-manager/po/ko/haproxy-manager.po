@@ -5,6 +5,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Command failed with code %d."
+msgstr "명령이 코드 %d(으)로 종료되었습니다."
+
 msgid "%d configuration files"
 msgstr "설정 파일 %d개"
 

@@ -2,6 +2,37 @@
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
 
+migrate_firewall_markers() {
+	local section marker name changed
+	changed=0
+
+	for section in $(uci -q show firewall | sed -n 's/^firewall\.\(@redirect\[[0-9][0-9]*\]\)=redirect/\1/p'); do
+		marker="$(uci -q get "firewall.$section.hm_disabled_by_haproxy_manager" 2>/dev/null || true)"
+		[ -n "$marker" ] || continue
+		if [ "$marker" = 1 ]; then
+			name="$(uci -q get "firewall.$section.name" 2>/dev/null || true)"
+			case "$name" in
+				"$FIREWALL_DISABLED_PREFIX"*) ;;
+				*) uci set "firewall.$section.name=$FIREWALL_DISABLED_PREFIX$name" ;;
+			esac
+		fi
+		uci -q delete "firewall.$section.hm_disabled_by_haproxy_manager" || true
+		changed=1
+	done
+
+	for section in $(uci -q show firewall | sed -n 's/^firewall\.\(@rule\[[0-9][0-9]*\]\)=rule/\1/p'); do
+		marker="$(uci -q get "firewall.$section.hm_managed" 2>/dev/null || true)"
+		[ -n "$marker" ] || continue
+		[ "$marker" != 1 ] || uci set "firewall.$section.name=$FIREWALL_RULE_NAME"
+		uci -q delete "firewall.$section.hm_managed" || true
+		changed=1
+	done
+
+	[ "$changed" != 1 ] || uci commit firewall
+}
+
+migrate_firewall_markers
+
 [ "$(uci_get main schema_version 1)" -lt 2 ] 2>/dev/null || exit 0
 
 SECTIONS="$(route_sections)"

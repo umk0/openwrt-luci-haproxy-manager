@@ -5,6 +5,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Command failed with code %d."
+msgstr "コマンドはコード %d で終了しました。"
+
 msgid "%d configuration files"
 msgstr "%d 個の設定ファイル"
 

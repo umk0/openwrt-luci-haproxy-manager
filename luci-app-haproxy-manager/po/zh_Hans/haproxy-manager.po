@@ -5,6 +5,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Command failed with code %d."
+msgstr "命令以代码 %d 退出。"
+
 msgid "%d configuration files"
 msgstr "%d 个配置文件"
 

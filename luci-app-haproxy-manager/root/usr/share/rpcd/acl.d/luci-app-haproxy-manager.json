@@ -2,7 +2,7 @@
   "luci-app-haproxy-manager": {
     "description": "Grant access to LuCI HAProxy Manager",
     "read": {
-      "uci": [ "haproxy_manager", "uhttpd", "firewall" ],
+      "uci": [ "haproxy_manager" ],
       "file": {
         "/etc/haproxy.cfg": [ "read" ],
         "/tmp/haproxy-manager-*": [ "read" ]
@@ -13,9 +13,8 @@
       }
     },
     "write": {
-      "uci": [ "haproxy_manager", "uhttpd", "firewall" ],
+      "uci": [ "haproxy_manager" ],
       "file": {
-        "/etc/haproxy.cfg": [ "write" ],
         "/usr/libexec/haproxy-manager/status": [ "exec" ],
         "/usr/libexec/haproxy-manager/generate": [ "exec" ],
         "/usr/libexec/haproxy-manager/apply": [ "exec" ],
@@ -27,7 +26,6 @@
         "/usr/libexec/haproxy-manager/ports": [ "exec" ],
         "/usr/libexec/haproxy-manager/rollback": [ "exec" ],
         "/usr/libexec/haproxy-manager/validate": [ "exec" ],
-        "/usr/libexec/haproxy-manager/write-raw": [ "exec" ],
         "/usr/libexec/haproxy-manager/apply-raw-file": [ "exec" ],
         "/tmp/haproxy-manager-*": [ "write" ]
       },

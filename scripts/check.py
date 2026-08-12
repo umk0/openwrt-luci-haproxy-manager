@@ -14,7 +14,6 @@ from i18n import LANGUAGES, parse_po
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "luci-app-haproxy-manager"
-VIEWS = PACKAGE / "htdocs" / "luci-static" / "resources" / "view" / "haproxy-manager"
 DIST = ROOT / "dist"
 
 
@@ -27,7 +26,7 @@ def translation_keys():
     pattern = re.compile(r"(?<![A-Za-z0-9_])_\(\s*(['\"])(.*?)\1\s*\)")
     keys = set()
 
-    for path in VIEWS.glob("*.js"):
+    for path in (PACKAGE / "htdocs" / "luci-static" / "resources").rglob("*.js"):
         keys.update(match.group(2) for match in pattern.finditer(path.read_text(encoding="utf-8")))
 
     for path in (PACKAGE / "root" / "usr" / "share").rglob("*.json"):

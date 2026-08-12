@@ -2,8 +2,8 @@
 /* global hmUi */
 'require view';
 'require form';
-'require fs';
 'require ui';
+'require uci';
 'require haproxy-manager.ui as hmUi';
 
 function listValue(value) {
@@ -93,7 +93,7 @@ function routePorts(map, sectionId, kind) {
 return view.extend({
 	load: function() {
 		return Promise.all([
-			fs.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() {
+			hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() {
 				return { stdout: '' };
 			})
 		]);
@@ -350,12 +350,14 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-action',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save().then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/generate', [ '/tmp/haproxy-manager-preview.cfg' ]);
+						return m.save(null, true).then(function() {
+							return uci.apply();
 						}).then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/validate', [ '/tmp/haproxy-manager-preview.cfg' ]);
+							return hmUi.exec('/usr/libexec/haproxy-manager/generate', [ '/tmp/haproxy-manager-preview.cfg' ]);
 						}).then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/firewall-plan', []);
+							return hmUi.exec('/usr/libexec/haproxy-manager/validate', [ '/tmp/haproxy-manager-preview.cfg' ]);
+						}).then(function() {
+							return hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []);
 						}).then(function(r) {
 							var plan = parseFirewall(r.stdout);
 							hmUi.notify(plan.conflicts.length ?
@@ -370,11 +372,13 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save().then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/apply', []);
+						return m.save(null, true).then(function() {
+							return uci.apply();
+						}).then(function() {
+							return hmUi.exec('/usr/libexec/haproxy-manager/apply', []);
 						}).then(function(r) {
 							hmUi.notify(r.stdout || _('Applied'), 'info');
-							window.setTimeout(function() { window.location.reload(); }, 900);
+							window.setTimeout(function() { window.location.reload(); }, 3500);
 						}).catch(function(err) {
 							hmUi.notifyError(err);
 						});

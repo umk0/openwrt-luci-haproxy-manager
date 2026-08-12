@@ -1,7 +1,6 @@
 'use strict';
 /* global hmUi */
 'require view';
-'require fs';
 'require ui';
 'require haproxy-manager.ui as hmUi';
 
@@ -56,11 +55,11 @@ function statusItem(label, value) {
 return view.extend({
 	load: function() {
 		return Promise.all([
-			fs.exec('/usr/libexec/haproxy-manager/status', []).catch(function(err) {
+			hmUi.exec('/usr/libexec/haproxy-manager/status', []).catch(function(err) {
 				return { stdout: '', stderr: err.message || String(err), code: 1 };
 			}),
-			fs.exec('/usr/libexec/haproxy-manager/backups', []).catch(function() { return { stdout: '' }; }),
-			fs.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() { return { stdout: '' }; })
+			hmUi.exec('/usr/libexec/haproxy-manager/backups', []).catch(function() { return { stdout: '' }; }),
+			hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() { return { stdout: '' }; })
 		]);
 	},
 
@@ -78,7 +77,7 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-negative important',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return fs.exec('/usr/libexec/haproxy-manager/rollback', [ backupId ]).then(function(r) {
+						return hmUi.exec('/usr/libexec/haproxy-manager/rollback', [ backupId ]).then(function(r) {
 							ui.hideModal();
 							hmUi.notify(r.stdout || _('Restored'), 'info');
 							window.setTimeout(function() { window.location.reload(); }, 900);
@@ -166,7 +165,7 @@ return view.extend({
 						'class': 'btn cbi-button cbi-button-add',
 						'type': 'button',
 						'click': ui.createHandlerFn(this, function() {
-							return fs.exec('/usr/libexec/haproxy-manager/backup', []).then(function() {
+							return hmUi.exec('/usr/libexec/haproxy-manager/backup', []).then(function() {
 								window.location.reload();
 							}).catch(function(err) { hmUi.notifyError(err); });
 						})

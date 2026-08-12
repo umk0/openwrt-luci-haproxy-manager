@@ -21,14 +21,20 @@ trap restore_on_error EXIT
 
 MANAGE_UHTTPD="$(uci_get main manage_uhttpd_bind 0)"
 LAN_BIND_IP="$(lan_ip || true)"
+UHTTPD_CHANGED=0
 
 if [ "$MANAGE_UHTTPD" = 1 ]; then
 	[ -n "$LAN_BIND_IP" ] || { echo "Cannot detect LAN IPv4 address. Set the LuCI LAN address manually." >&2; exit 1; }
-	uci -q delete uhttpd.main.listen_http || true
-	uci -q delete uhttpd.main.listen_https || true
-	uci add_list uhttpd.main.listen_http="$LAN_BIND_IP:80"
-	uci add_list uhttpd.main.listen_https="$LAN_BIND_IP:443"
-	uci commit uhttpd
+	CURRENT_HTTP="$(uci -q get uhttpd.main.listen_http 2>/dev/null || true)"
+	CURRENT_HTTPS="$(uci -q get uhttpd.main.listen_https 2>/dev/null || true)"
+	if [ "$CURRENT_HTTP" != "$LAN_BIND_IP:80" ] || [ "$CURRENT_HTTPS" != "$LAN_BIND_IP:443" ]; then
+		uci -q delete uhttpd.main.listen_http || true
+		uci -q delete uhttpd.main.listen_https || true
+		uci add_list uhttpd.main.listen_http="$LAN_BIND_IP:80"
+		uci add_list uhttpd.main.listen_https="$LAN_BIND_IP:443"
+		uci commit uhttpd
+		UHTTPD_CHANGED=1
+	fi
 fi
 
 if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
@@ -36,8 +42,24 @@ if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
 fi
 
 cp "$TMP_CFG" "$HAPROXY_CFG"
-/etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 /etc/init.d/haproxy enable >/dev/null 2>&1 || true
+
+if [ "$UHTTPD_CHANGED" = 1 ]; then
+	APPLIED=1
+	trap - EXIT
+	(
+		sleep 2
+		if /etc/init.d/uhttpd reload >/dev/null 2>&1 && /etc/init.d/haproxy restart >/dev/null 2>&1; then
+			logger -t haproxy-manager "LuCI and HAProxy reloaded successfully"
+		else
+			/usr/libexec/haproxy-manager/rollback "$(basename "$BACKUP_DIR")" >/dev/null 2>&1 || true
+			logger -t haproxy-manager "Service reload failed; restored $(basename "$BACKUP_DIR")"
+		fi
+	) >/dev/null 2>&1 &
+	echo "Applied successfully. LuCI and HAProxy will reload shortly. Backup: $(basename "$BACKUP_DIR")"
+	exit 0
+fi
+
 /etc/init.d/haproxy restart
 
 APPLIED=1

@@ -4,6 +4,8 @@ CONFIG=haproxy_manager
 HAPROXY_CFG=/etc/haproxy.cfg
 TMP_CFG=/tmp/haproxy-manager.cfg
 BACKUP_LIMIT=7
+FIREWALL_RULE_NAME='HAProxy Manager: WAN listeners'
+FIREWALL_DISABLED_PREFIX='HAProxy Manager disabled: '
 
 uci_get() {
 	local section="$1"
@@ -47,11 +49,18 @@ route_name() {
 }
 
 is_valid_host() {
-	printf '%s' "$1" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$'
+	case "$1" in
+		''|[!A-Za-z0-9]*|*[!A-Za-z0-9]) return 1 ;;
+		*[!A-Za-z0-9.-]*) return 1 ;;
+	esac
+	return 0
 }
 
 is_valid_ip_or_host() {
-	printf '%s' "$1" | grep -Eq '^[A-Za-z0-9_.:-]+$'
+	case "$1" in
+		''|*[!A-Za-z0-9_.:-]*) return 1 ;;
+	esac
+	return 0
 }
 
 is_valid_port() {

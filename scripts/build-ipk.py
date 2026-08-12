@@ -160,19 +160,22 @@ def main():
 [ -n "${IPKG_INSTROOT}" ] && exit 0
 chmod +x /usr/libexec/haproxy-manager/* 2>/dev/null || true
 /usr/libexec/haproxy-manager/migrate >/dev/null 2>&1 || logger -t haproxy-manager "Configuration migration failed"
-rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
+rm -f /tmp/luci-indexcache.* 2>/dev/null || true
+rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
 exit 0
 """
     postrm = """#!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] && exit 0
-rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
+rm -f /tmp/luci-indexcache.* 2>/dev/null || true
+rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
 exit 0
 """
     i18n_post = """#!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] && exit 0
-rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
+rm -f /tmp/luci-indexcache.* 2>/dev/null || true
+rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
 exit 0
 """

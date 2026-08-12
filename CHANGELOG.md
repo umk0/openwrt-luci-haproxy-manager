@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 - 2026-08-12
+
+- Commit LuCI form changes before running HAProxy helper scripts.
+- Treat non-zero helper exit codes as errors throughout the interface.
+- Reload uHTTPd only when its bind addresses change and preserve the RPC response.
+- Replace custom firewall marker options with supported rule-name prefixes.
+- Tighten rpcd permissions, input validation, backup creation, and cache cleanup.
+
 ## 0.5.0 - 2026-08-11
 
 - Adopt the native OpenWrt LuCI `luci.mk` packaging layout.

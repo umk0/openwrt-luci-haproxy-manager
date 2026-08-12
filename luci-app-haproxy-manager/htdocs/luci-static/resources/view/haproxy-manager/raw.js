@@ -29,7 +29,7 @@ return view.extend({
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
 						return fs.write('/tmp/haproxy-manager-raw.cfg', textarea.value).then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/apply-raw-file', [ '/tmp/haproxy-manager-raw.cfg' ]);
+							return hmUi.exec('/usr/libexec/haproxy-manager/apply-raw-file', [ '/tmp/haproxy-manager-raw.cfg' ]);
 						}).then(function(r) {
 							ui.hideModal();
 							hmUi.notify(r.stdout || _('Applied'), 'info');
@@ -65,7 +65,7 @@ return view.extend({
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
 						return fs.write('/tmp/haproxy-manager-raw.cfg', textarea.value).then(function() {
-							return fs.exec('/usr/libexec/haproxy-manager/validate', [ '/tmp/haproxy-manager-raw.cfg' ]);
+							return hmUi.exec('/usr/libexec/haproxy-manager/validate', [ '/tmp/haproxy-manager-raw.cfg' ]);
 						}).then(function(r) {
 							hmUi.notify(r.stdout || _('Config is valid'), 'info');
 						}).catch(function(err) {
