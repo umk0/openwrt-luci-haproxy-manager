@@ -80,7 +80,7 @@ return view.extend({
 						return hmUi.exec('/usr/libexec/haproxy-manager/rollback', [ backupId ]).then(function(r) {
 							ui.hideModal();
 							hmUi.notify(r.stdout || _('Restored'), 'info');
-							window.setTimeout(function() { window.location.reload(); }, 900);
+							hmUi.reloadAfterApply(3500);
 						}).catch(function(err) {
 							ui.hideModal();
 							hmUi.notifyError(err);

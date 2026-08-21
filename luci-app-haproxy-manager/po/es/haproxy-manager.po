@@ -373,3 +373,20 @@ msgstr "Web (HTTP + HTTPS)"
 
 msgid "Web entry ports"
 msgstr "Puertos de entrada Web"
+msgid "Changes saved and applied."
+msgstr "Cambios guardados y aplicados."
+
+msgid "Delete and apply"
+msgstr "Eliminar y aplicar"
+
+msgid "Delete service?"
+msgstr "¿Eliminar el servicio?"
+
+msgid "Synchronize now"
+msgstr "Sincronizar ahora"
+
+msgid "The service will be removed from HAProxy and the firewall immediately."
+msgstr "El servicio se eliminará inmediatamente de HAProxy y del cortafuegos."
+
+msgid "Unable to create a recovery point."
+msgstr "No se pudo crear un punto de recuperación."

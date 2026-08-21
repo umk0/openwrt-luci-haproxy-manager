@@ -2,7 +2,58 @@
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
 
+LOCK_DIR=/var/lock/haproxy-manager.apply
+TMP_CFG="/tmp/haproxy-manager-apply.$$"
+BACKUP_ID=""
+APPLIED=0
+
+if [ "${1:-}" = --backup ]; then
+	BACKUP_ID="${2:-}"
+	[ "$#" -eq 2 ] || { echo "Usage: apply [--backup YYYYMMDD-HHMMSS]" >&2; exit 1; }
+	is_valid_backup_id "$BACKUP_ID" || { echo "Invalid backup identifier" >&2; exit 1; }
+elif [ "$#" -ne 0 ]; then
+	echo "Usage: apply [--backup YYYYMMDD-HHMMSS]" >&2
+	exit 1
+fi
+
+mkdir "$LOCK_DIR" 2>/dev/null || { echo "Another HAProxy Manager operation is already running." >&2; exit 1; }
+
+cleanup() {
+	rm -f "$TMP_CFG"
+	rmdir "$LOCK_DIR" 2>/dev/null || true
+}
+
+restore_on_error() {
+	status=$?
+	trap - EXIT
+	if [ "$APPLIED" != 1 ] && [ -n "$BACKUP_ID" ]; then
+		/usr/libexec/haproxy-manager/rollback "$BACKUP_ID" >/dev/null 2>&1 || true
+		logger -t haproxy-manager "Apply failed; restored $BACKUP_ID"
+	fi
+	cleanup
+	exit "$status"
+}
+trap restore_on_error EXIT
+
+if [ -n "$BACKUP_ID" ]; then
+	[ -d "$(backup_dir)/$BACKUP_ID" ] || { echo "Backup not found: $BACKUP_ID" >&2; exit 1; }
+else
+	BACKUP_ID="$(basename "$(/usr/libexec/haproxy-manager/backup)")"
+fi
+
 /usr/libexec/haproxy-manager/migrate >/dev/null
+
+if [ "$(uci_get main enabled 0)" != 1 ]; then
+	/usr/libexec/haproxy-manager/firewall-sync >/dev/null
+	/etc/init.d/haproxy stop >/dev/null 2>&1 || true
+	/etc/init.d/haproxy disable >/dev/null 2>&1 || true
+	APPLIED=1
+	trap - EXIT
+	cleanup
+	echo "Managed HAProxy service disabled. Backup: $BACKUP_ID"
+	exit 0
+fi
+
 /usr/libexec/haproxy-manager/generate "$TMP_CFG" >/dev/null
 /usr/libexec/haproxy-manager/validate "$TMP_CFG"
 
@@ -10,21 +61,13 @@ if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
 	/usr/libexec/haproxy-manager/firewall-sync --check >/dev/null
 fi
 
-BACKUP_DIR="$(/usr/libexec/haproxy-manager/backup)"
-APPLIED=0
-
-restore_on_error() {
-	[ "$APPLIED" = 1 ] && return 0
-	/usr/libexec/haproxy-manager/rollback "$(basename "$BACKUP_DIR")" >/dev/null 2>&1 || true
-}
-trap restore_on_error EXIT
-
 MANAGE_UHTTPD="$(uci_get main manage_uhttpd_bind 0)"
 LAN_BIND_IP="$(lan_ip || true)"
 UHTTPD_CHANGED=0
 
 if [ "$MANAGE_UHTTPD" = 1 ]; then
 	[ -n "$LAN_BIND_IP" ] || { echo "Cannot detect LAN IPv4 address. Set the LuCI LAN address manually." >&2; exit 1; }
+	is_valid_ip_or_host "$LAN_BIND_IP" || { echo "Invalid LuCI LAN address: $LAN_BIND_IP" >&2; exit 1; }
 	CURRENT_HTTP="$(uci -q get uhttpd.main.listen_http 2>/dev/null || true)"
 	CURRENT_HTTPS="$(uci -q get uhttpd.main.listen_https 2>/dev/null || true)"
 	if [ "$CURRENT_HTTP" != "$LAN_BIND_IP:80" ] || [ "$CURRENT_HTTPS" != "$LAN_BIND_IP:443" ]; then
@@ -37,26 +80,24 @@ if [ "$MANAGE_UHTTPD" = 1 ]; then
 	fi
 fi
 
-if [ "$(uci_get main manage_firewall 0)" = 1 ]; then
-	/usr/libexec/haproxy-manager/firewall-sync
-fi
-
+/usr/libexec/haproxy-manager/firewall-sync >/dev/null
 cp "$TMP_CFG" "$HAPROXY_CFG"
 /etc/init.d/haproxy enable >/dev/null 2>&1 || true
 
 if [ "$UHTTPD_CHANGED" = 1 ]; then
 	APPLIED=1
 	trap - EXIT
+	cleanup
 	(
 		sleep 2
 		if /etc/init.d/uhttpd reload >/dev/null 2>&1 && /etc/init.d/haproxy restart >/dev/null 2>&1; then
 			logger -t haproxy-manager "LuCI and HAProxy reloaded successfully"
 		else
-			/usr/libexec/haproxy-manager/rollback "$(basename "$BACKUP_DIR")" >/dev/null 2>&1 || true
-			logger -t haproxy-manager "Service reload failed; restored $(basename "$BACKUP_DIR")"
+			/usr/libexec/haproxy-manager/rollback "$BACKUP_ID" >/dev/null 2>&1 || true
+			logger -t haproxy-manager "Service reload failed; restored $BACKUP_ID"
 		fi
 	) >/dev/null 2>&1 &
-	echo "Applied successfully. LuCI and HAProxy will reload shortly. Backup: $(basename "$BACKUP_DIR")"
+	echo "Applied successfully. LuCI and HAProxy will reload shortly. Backup: $BACKUP_ID"
 	exit 0
 fi
 
@@ -64,4 +105,5 @@ fi
 
 APPLIED=1
 trap - EXIT
-echo "Applied successfully. Backup: $(basename "$BACKUP_DIR")"
+cleanup
+echo "Applied successfully. Backup: $BACKUP_ID"

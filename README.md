@@ -14,6 +14,7 @@ for `/etc/haproxy.cfg`.
 - SSH and Remote Desktop presets with sensible port defaults.
 - Custom TCP services with multiple `public:destination` port mappings.
 - Optional WAN firewall rule synchronization and conflict detection.
+- Service changes are validated and applied automatically when saved.
 - Syntax validation before HAProxy restarts.
 - Named recovery points with one-click restore for HAProxy, firewall, and
   uHTTPd state.
@@ -118,12 +119,13 @@ the official LuCI repository builds both the base and translation packages.
 
 ## Configuration safety
 
-Before applying a generated or manually edited configuration, the package:
+Before applying a generated configuration, the package:
 
-1. Generates or writes a temporary file.
-2. Runs `haproxy -c` against that file.
-3. Saves the current HAProxy, firewall, uHTTPd, and UCI configuration.
-4. Installs the validated file and restarts the affected services.
+1. Saves the current HAProxy, firewall, uHTTPd, UCI, and HAProxy service state.
+2. Commits only the `haproxy_manager` UCI package.
+3. Generates a temporary file and runs `haproxy -c` against it.
+4. Synchronizes owned firewall rules and restarts affected services.
+5. Restores the recovery point automatically if any step fails.
 
 Emergency rollback over SSH:
 
@@ -137,7 +139,7 @@ newest recovery points are retained; older snapshots are removed automatically.
 ## Development
 
 Package sources live in `luci-app-haproxy-manager/`. Keep UI strings in the
-locale JSON catalogs; `scripts/check.py` reports missing translations. The
+PO catalogs; `scripts/check.py` reports missing translations. The
 build regenerates LuCI `.lmo` files before packaging.
 
 Licensed under the MIT License.

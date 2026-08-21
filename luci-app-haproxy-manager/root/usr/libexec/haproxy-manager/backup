@@ -8,11 +8,27 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BASE"
 BASE="$(cd "$BASE" && pwd -P)"
 DIR="$BASE/$STAMP"
-mkdir -p "$DIR"
+while ! mkdir "$DIR" 2>/dev/null; do
+	sleep 1
+	STAMP="$(date +%Y%m%d-%H%M%S)"
+	DIR="$BASE/$STAMP"
+done
 [ -f /etc/config/firewall ] && cp /etc/config/firewall "$DIR/firewall"
 [ -f /etc/config/uhttpd ] && cp /etc/config/uhttpd "$DIR/uhttpd"
 [ -f /etc/config/haproxy_manager ] && cp /etc/config/haproxy_manager "$DIR/haproxy_manager"
 [ -f "$HAPROXY_CFG" ] && cp "$HAPROXY_CFG" "$DIR/haproxy.cfg"
+{
+	if /etc/init.d/haproxy enabled >/dev/null 2>&1; then
+		printf 'enabled=1\n'
+	else
+		printf 'enabled=0\n'
+	fi
+	if /etc/init.d/haproxy status >/dev/null 2>&1; then
+		printf 'running=1\n'
+	else
+		printf 'running=0\n'
+	fi
+} > "$DIR/haproxy.state"
 
 printf '%s\n' "$DIR" > "$BASE/LAST"
 

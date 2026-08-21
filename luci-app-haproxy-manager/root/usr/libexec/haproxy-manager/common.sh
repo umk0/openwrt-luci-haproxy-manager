@@ -63,6 +63,23 @@ is_valid_ip_or_host() {
 	return 0
 }
 
+is_valid_backup_id() {
+	case "$1" in
+		[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+backend_address() {
+	local host="$1"
+	local port="$2"
+
+	case "$host" in
+		*:*) printf '[%s]:%s\n' "$host" "$port" ;;
+		*) printf '%s:%s\n' "$host" "$port" ;;
+	esac
+}
+
 is_valid_port() {
 	local port="$1"
 	[ "$port" -ge 1 ] 2>/dev/null && [ "$port" -le 65535 ] 2>/dev/null
@@ -132,6 +149,7 @@ required_ports() {
 
 	http_port="$(uci_get main http_port 80)"
 	https_port="$(uci_get main https_port 443)"
+	[ "$(uci_get main enabled 0)" = 1 ] || return 0
 
 	for section in $(route_sections); do
 		enabled="$(uci_get "$section" enabled 1)"
