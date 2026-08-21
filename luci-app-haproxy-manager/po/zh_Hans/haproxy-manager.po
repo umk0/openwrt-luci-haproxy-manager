@@ -373,3 +373,20 @@ msgstr "Web（HTTP + HTTPS）"
 
 msgid "Web entry ports"
 msgstr "Web 入口端口"
+msgid "Changes saved and applied."
+msgstr "更改已保存并应用。"
+
+msgid "Delete and apply"
+msgstr "删除并应用"
+
+msgid "Delete service?"
+msgstr "删除服务？"
+
+msgid "Synchronize now"
+msgstr "立即同步"
+
+msgid "The service will be removed from HAProxy and the firewall immediately."
+msgstr "该服务将立即从 HAProxy 和防火墙中移除。"
+
+msgid "Unable to create a recovery point."
+msgstr "无法创建恢复点。"

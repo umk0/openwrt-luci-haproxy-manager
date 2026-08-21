@@ -373,3 +373,20 @@ msgstr "Web (HTTP + HTTPS)"
 
 msgid "Web entry ports"
 msgstr "Web 公開ポート"
+msgid "Changes saved and applied."
+msgstr "変更を保存して適用しました。"
+
+msgid "Delete and apply"
+msgstr "削除して適用"
+
+msgid "Delete service?"
+msgstr "サービスを削除しますか？"
+
+msgid "Synchronize now"
+msgstr "今すぐ同期"
+
+msgid "The service will be removed from HAProxy and the firewall immediately."
+msgstr "サービスは HAProxy とファイアウォールから直ちに削除されます。"
+
+msgid "Unable to create a recovery point."
+msgstr "復元ポイントを作成できません。"

@@ -3,14 +3,47 @@ set -eu
 . /usr/libexec/haproxy-manager/common.sh
 
 SRC="${1:-}"
-case "$SRC" in
-	/tmp/haproxy-manager-*) ;;
+NAME="${SRC#/tmp/}"
+case "$NAME" in
+	''|*/*|*[!A-Za-z0-9._-]*) echo "Refusing unsafe raw config path: $SRC" >&2; exit 1 ;;
+esac
+[ "$SRC" = "/tmp/$NAME" ] || { echo "Refusing unsafe raw config path: $SRC" >&2; exit 1; }
+case "$NAME" in
+	haproxy-manager-*) ;;
 	*) echo "Refusing unsafe raw config path: $SRC" >&2; exit 1 ;;
 esac
 
 [ -f "$SRC" ] || { echo "Raw config file not found: $SRC" >&2; exit 1; }
-/usr/libexec/haproxy-manager/validate "$SRC"
-/usr/libexec/haproxy-manager/backup >/dev/null
-cp "$SRC" "$HAPROXY_CFG"
+
+LOCK_DIR=/var/lock/haproxy-manager.apply
+mkdir "$LOCK_DIR" 2>/dev/null || { echo "Another HAProxy Manager operation is already running." >&2; exit 1; }
+TMP_RAW="/tmp/haproxy-manager-raw-apply.$$"
+BACKUP_ID=""
+APPLIED=0
+
+restore_on_error() {
+	status=$?
+	trap - EXIT
+	if [ "$APPLIED" != 1 ] && [ -n "$BACKUP_ID" ]; then
+		/usr/libexec/haproxy-manager/rollback "$BACKUP_ID" >/dev/null 2>&1 || true
+		logger -t haproxy-manager "Raw apply failed; restored $BACKUP_ID"
+	fi
+	rm -f "$TMP_RAW"
+	rmdir "$LOCK_DIR" 2>/dev/null || true
+	exit "$status"
+}
+trap restore_on_error EXIT
+
+cp "$SRC" "$TMP_RAW"
+/usr/libexec/haproxy-manager/validate "$TMP_RAW"
+BACKUP_ID="$(basename "$(/usr/libexec/haproxy-manager/backup)")"
+
+cp "$TMP_RAW" "$HAPROXY_CFG"
+/etc/init.d/haproxy enable >/dev/null 2>&1 || true
 /etc/init.d/haproxy restart
-echo "Raw HAProxy config applied"
+
+APPLIED=1
+trap - EXIT
+rm -f "$TMP_RAW"
+rmdir "$LOCK_DIR" 2>/dev/null || true
+echo "Raw HAProxy config applied. Backup: $BACKUP_ID"

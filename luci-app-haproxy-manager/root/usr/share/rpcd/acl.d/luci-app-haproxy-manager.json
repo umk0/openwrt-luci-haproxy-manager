@@ -8,7 +8,6 @@
         "/tmp/haproxy-manager-*": [ "read" ]
       },
       "ubus": {
-        "service": [ "list" ],
         "file": [ "read", "stat" ]
       }
     },
@@ -21,16 +20,14 @@
         "/usr/libexec/haproxy-manager/backup": [ "exec" ],
         "/usr/libexec/haproxy-manager/backups": [ "exec" ],
         "/usr/libexec/haproxy-manager/firewall-plan": [ "exec" ],
-        "/usr/libexec/haproxy-manager/firewall-sync": [ "exec" ],
-        "/usr/libexec/haproxy-manager/migrate": [ "exec" ],
-        "/usr/libexec/haproxy-manager/ports": [ "exec" ],
         "/usr/libexec/haproxy-manager/rollback": [ "exec" ],
         "/usr/libexec/haproxy-manager/validate": [ "exec" ],
         "/usr/libexec/haproxy-manager/apply-raw-file": [ "exec" ],
         "/tmp/haproxy-manager-*": [ "write" ]
       },
       "ubus": {
-        "file": [ "exec", "write" ]
+        "file": [ "exec", "write" ],
+        "uci": [ "commit" ]
       }
     }
   }

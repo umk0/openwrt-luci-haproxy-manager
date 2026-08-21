@@ -10,17 +10,47 @@ if [ "$TARGET" = last ]; then
 	TARGET="$(basename "$(cat "$BASE/LAST")")"
 fi
 
-printf '%s' "$TARGET" | grep -Eq '^[0-9]{8}-[0-9]{6}$' || { echo "Invalid backup identifier" >&2; exit 1; }
+is_valid_backup_id "$TARGET" || { echo "Invalid backup identifier" >&2; exit 1; }
 TARGET_DIR="$BASE/$TARGET"
 [ -d "$TARGET_DIR" ] || { echo "Backup not found: $TARGET" >&2; exit 1; }
 
-[ -f "$TARGET_DIR/firewall" ] && cp "$TARGET_DIR/firewall" /etc/config/firewall
-[ -f "$TARGET_DIR/uhttpd" ] && cp "$TARGET_DIR/uhttpd" /etc/config/uhttpd
+firewall_changed=0
+uhttpd_changed=0
+
+if [ -f "$TARGET_DIR/firewall" ] && ! cmp -s "$TARGET_DIR/firewall" /etc/config/firewall; then
+	cp "$TARGET_DIR/firewall" /etc/config/firewall
+	firewall_changed=1
+fi
+if [ -f "$TARGET_DIR/uhttpd" ] && ! cmp -s "$TARGET_DIR/uhttpd" /etc/config/uhttpd; then
+	cp "$TARGET_DIR/uhttpd" /etc/config/uhttpd
+	uhttpd_changed=1
+fi
 [ -f "$TARGET_DIR/haproxy_manager" ] && cp "$TARGET_DIR/haproxy_manager" /etc/config/haproxy_manager
 [ -f "$TARGET_DIR/haproxy.cfg" ] && cp "$TARGET_DIR/haproxy.cfg" "$HAPROXY_CFG"
 
-/etc/init.d/firewall restart >/dev/null 2>&1 || true
-/etc/init.d/uhttpd restart >/dev/null 2>&1 || true
-/etc/init.d/haproxy restart >/dev/null 2>&1 || true
+[ "$firewall_changed" != 1 ] || /etc/init.d/firewall restart >/dev/null 2>&1 || true
 
-echo "Restored backup $TARGET"
+haproxy_enabled=1
+haproxy_running=1
+if [ -f "$TARGET_DIR/haproxy.state" ]; then
+	haproxy_enabled="$(sed -n 's/^enabled=//p' "$TARGET_DIR/haproxy.state" | head -1)"
+	haproxy_running="$(sed -n 's/^running=//p' "$TARGET_DIR/haproxy.state" | head -1)"
+fi
+
+if [ "$haproxy_enabled" = 1 ]; then
+	/etc/init.d/haproxy enable >/dev/null 2>&1 || true
+else
+	/etc/init.d/haproxy disable >/dev/null 2>&1 || true
+fi
+
+(
+	sleep 2
+	[ "$uhttpd_changed" != 1 ] || /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
+	if [ "$haproxy_running" = 1 ]; then
+		/etc/init.d/haproxy restart >/dev/null 2>&1 || true
+	else
+		/etc/init.d/haproxy stop >/dev/null 2>&1 || true
+	fi
+) >/dev/null 2>&1 &
+
+echo "Restored backup $TARGET. Affected services will reload shortly."

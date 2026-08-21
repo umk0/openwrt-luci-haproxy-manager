@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.2 - 2026-08-21
+
+- Replace rollback-protected `uci.apply()` with a package-scoped UCI commit to
+  avoid rpcd code 5 failures on OpenWrt 25.12.
+- Automatically validate and apply service additions, edits, removals, and
+  reordering as one recoverable operation.
+- Restore the previous UCI, HAProxy, firewall, and uHTTPd state when an apply
+  fails, including failures that happen during generation or validation.
+- Clean up owned firewall state when automation is disabled and correctly stop
+  HAProxy when the managed service is disabled.
+- Serialize apply operations, preserve the previous HAProxy runtime state during
+  rollback, defer connection-affecting restore actions until after the RPC
+  response, and close the raw-config validation race.
+- Harden raw-config paths and backup identifiers, avoid same-second recovery
+  point collisions, and support IPv6 listeners and backends.
+
 ## 0.5.1 - 2026-08-12
 
 - Commit LuCI form changes before running HAProxy helper scripts.

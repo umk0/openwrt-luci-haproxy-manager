@@ -1,9 +1,9 @@
 'use strict';
 /* global hmUi */
 'require view';
+'require dom';
 'require form';
 'require ui';
-'require uci';
 'require haproxy-manager.ui as hmUi';
 
 function listValue(value) {
@@ -135,12 +135,14 @@ return view.extend({
 
 		o = s.option(form.Value, 'host', _('Domain'));
 		o.placeholder = 'example.org';
+		o.datatype = 'hostname';
 		o.rmempty = false;
 		o.modalonly = true;
 		o.depends('kind', 'web');
 
 		o = s.option(form.Value, 'backend_host', _('Destination host'));
 		o.placeholder = '192.0.2.10';
+		o.datatype = 'or(ipaddr,hostname)';
 		o.rmempty = false;
 		o.modalonly = true;
 
@@ -296,6 +298,94 @@ return view.extend({
 			}, state);
 		};
 
+		function applied(reload) {
+			hmUi.notifyApplied();
+			if (reload)
+				hmUi.reloadAfterApply();
+		}
+
+		function applyMap(reload) {
+			return hmUi.saveAndApply(m).then(function() {
+				applied(reload);
+			}).catch(function(error) {
+				hmUi.notifyError(error);
+				if (reload)
+					hmUi.reloadAfterApply(3500);
+			});
+		}
+
+		var baseHandleDrop = s.handleDrop;
+		var baseHandleTouchEnd = s.handleTouchEnd;
+		var baseHandleSort = s.handleSort;
+
+		s.handleModalSave = function(modalMap, ev) {
+			var mapNode = this.getActiveModalMap();
+			var activeMap = dom.findClassInstance(mapNode);
+
+			return activeMap.save(null, true).then(function() {
+				return hmUi.commitAndApply();
+			}).then(function() {
+				return this.handleModalCancel(modalMap, ev, true);
+			}.bind(this)).then(function() {
+				applied(true);
+			}).catch(function(error) {
+				hmUi.notifyError(error);
+			});
+		};
+
+		s.handleRemove = function(sectionId) {
+			ui.showModal(_('Delete service?'), [
+				E('p', _('The service will be removed from HAProxy and the firewall immediately.')),
+				E('div', { 'class': 'right' }, [
+					E('button', {
+						'class': 'btn cbi-button',
+						'click': ui.hideModal
+					}, _('Cancel')),
+					' ',
+					E('button', {
+						'class': 'btn cbi-button cbi-button-negative important',
+						'click': ui.createHandlerFn(this, function() {
+							ui.hideModal();
+							m.data.remove('haproxy_manager', sectionId);
+							return applyMap(true);
+						})
+					}, _('Delete and apply'))
+				])
+			]);
+		};
+
+		function applyReorder() {
+			window.setTimeout(function() {
+				applyMap(true);
+			}, 100);
+		}
+
+		s.handleDrop = function(ev) {
+			var shouldApply = !!(ev.currentTarget && ev.currentTarget.querySelector('.drag-over-above, .drag-over-below'));
+			var result = baseHandleDrop.call(this, ev);
+			if (shouldApply)
+				applyReorder();
+			return result;
+		};
+
+		s.handleTouchEnd = function(ev) {
+			var row = ev.target && ev.target.closest ? ev.target.closest('.tr') : null;
+			var shouldApply = !!(document.querySelector('.touchsort-element') && row &&
+				row.parentNode.querySelector('.drag-over-above, .drag-over-below'));
+			var result = baseHandleTouchEnd.call(this, ev);
+			if (shouldApply)
+				applyReorder();
+			return result;
+		};
+
+		s.handleSort = function(ev) {
+			var shouldApply = !!(ev.target && ev.target.closest && ev.target.closest('th[data-sortable-row]'));
+			var result = baseHandleSort.call(this, ev);
+			if (shouldApply)
+				applyReorder();
+			return result;
+		};
+
 		return m.render().then(function(node) {
 			var filterInput = E('input', {
 				'id': 'haproxy-route-filter',
@@ -350,11 +440,7 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-action',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save(null, true).then(function() {
-							return uci.apply();
-						}).then(function() {
-							return hmUi.exec('/usr/libexec/haproxy-manager/generate', [ '/tmp/haproxy-manager-preview.cfg' ]);
-						}).then(function() {
+						return hmUi.exec('/usr/libexec/haproxy-manager/generate', [ '/tmp/haproxy-manager-preview.cfg' ]).then(function() {
 							return hmUi.exec('/usr/libexec/haproxy-manager/validate', [ '/tmp/haproxy-manager-preview.cfg' ]);
 						}).then(function() {
 							return hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []);
@@ -372,18 +458,9 @@ return view.extend({
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save(null, true).then(function() {
-							return uci.apply();
-						}).then(function() {
-							return hmUi.exec('/usr/libexec/haproxy-manager/apply', []);
-						}).then(function(r) {
-							hmUi.notify(r.stdout || _('Applied'), 'info');
-							window.setTimeout(function() { window.location.reload(); }, 3500);
-						}).catch(function(err) {
-							hmUi.notifyError(err);
-						});
+						return applyMap(true);
 					})
-				}, _('Apply changes'))
+				}, _('Synchronize now'))
 			]));
 
 			updateFilter();

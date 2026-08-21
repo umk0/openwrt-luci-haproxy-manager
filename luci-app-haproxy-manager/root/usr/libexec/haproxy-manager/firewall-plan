@@ -33,7 +33,16 @@ for port in $PORTS; do
 done
 
 for redirect in $(uci -q show firewall | sed -n 's/^firewall\.\(@redirect\[[0-9][0-9]*\]\)=redirect/\1/p'); do
-	[ "$(uci -q get "firewall.$redirect.enabled" 2>/dev/null || echo 1)" = 1 ] || continue
+	redirect_enabled="$(uci -q get "firewall.$redirect.enabled" 2>/dev/null || echo 1)"
+	redirect_name="$(uci -q get "firewall.$redirect.name" 2>/dev/null || true)"
+	if [ "$redirect_enabled" != 1 ]; then
+		case "$redirect_name" in
+			"$FIREWALL_DISABLED_PREFIX"*)
+				[ "$MANAGED" = 1 ] && [ "$MODE" != disable ] || continue
+			;;
+			*) continue ;;
+		esac
+	fi
 	[ "$(uci -q get "firewall.$redirect.src" 2>/dev/null || true)" = "$ZONE" ] || continue
 
 	proto="$(uci -q get "firewall.$redirect.proto" 2>/dev/null || echo 'tcp udp')"
@@ -44,7 +53,7 @@ for redirect in $(uci -q show firewall | sed -n 's/^firewall\.\(@redirect\[[0-9]
 
 	for port in $PORTS; do
 		port_spec_contains "$spec" "$port" || continue
-		name="$(uci -q get "firewall.$redirect.name" 2>/dev/null || echo "$redirect")"
+		name="${redirect_name:-$redirect}"
 		dest_ip="$(uci -q get "firewall.$redirect.dest_ip" 2>/dev/null || true)"
 		dest_port="$(uci -q get "firewall.$redirect.dest_port" 2>/dev/null || true)"
 		printf 'conflict\t%s\t%s\t%s\t%s\t%s\n' "$redirect" "$name" "$spec" "$dest_ip" "$dest_port"

@@ -3,7 +3,6 @@
 'require view';
 'require form';
 'require ui';
-'require uci';
 'require haproxy-manager.ui as hmUi';
 
 return view.extend({
@@ -24,6 +23,7 @@ return view.extend({
 		o = s.option(form.Value, 'wan_bind_ip', _('WAN bind address'));
 		o.placeholder = _('Automatic');
 		o.default = 'auto';
+		o.datatype = 'or(ipaddr,hostname)';
 		o.rmempty = false;
 
 		s = m.section(form.NamedSection, 'main', 'settings', _('Web entry ports'));
@@ -50,6 +50,7 @@ return view.extend({
 		o = s.option(form.Value, 'lan_bind_ip', _('LuCI LAN address'));
 		o.placeholder = _('Automatic');
 		o.default = 'auto';
+		o.datatype = 'or(ipaddr,hostname)';
 		o.depends('manage_uhttpd_bind', '1');
 
 		s = m.section(form.NamedSection, 'main', 'settings', _('Firewall automation'));
@@ -90,33 +91,18 @@ return view.extend({
 
 			node.appendChild(E('div', { 'class': 'cbi-page-actions hm-actions' }, [
 				E('button', {
-					'class': 'btn cbi-button cbi-button-save',
-					'type': 'button',
-					'click': ui.createHandlerFn(this, function() {
-						return m.save(null, true).then(function() {
-							return uci.apply();
-						}).then(function() {
-							hmUi.notify(_('Settings saved'), 'info');
-						}).catch(function(err) {
-							hmUi.notifyError(err);
-						});
-					})
-				}, _('Save settings')),
-				E('button', {
 					'class': 'btn cbi-button cbi-button-apply',
 					'type': 'button',
 					'click': ui.createHandlerFn(this, function() {
-						return m.save(null, true).then(function() {
-							return uci.apply();
-						}).then(function() {
-							return hmUi.exec('/usr/libexec/haproxy-manager/apply', []);
-						}).then(function(r) {
-							hmUi.notify(r.stdout || _('Applied'), 'info');
+						return hmUi.saveAndApply(m).then(function() {
+							hmUi.notifyApplied();
+							hmUi.reloadAfterApply();
 						}).catch(function(err) {
 							hmUi.notifyError(err);
+							hmUi.reloadAfterApply(3500);
 						});
 					})
-				}, _('Save and apply'))
+				}, _('Save settings'))
 			]));
 
 			return node;

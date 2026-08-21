@@ -20,6 +20,7 @@ if [ -z "$WAN_IP" ]; then
 	echo "Cannot detect WAN IPv4 address. Set the WAN bind address manually." >&2
 	exit 1
 fi
+is_valid_ip_or_host "$WAN_IP" || { echo "Invalid WAN bind address: $WAN_IP" >&2; exit 1; }
 
 TMP_HTTP_RULES=/tmp/haproxy-manager-http-rules.$$
 TMP_HTTP_BACKENDS=/tmp/haproxy-manager-http-backends.$$
@@ -55,6 +56,8 @@ claim_port() {
 
 add_http_route() {
 	local name="$1" host="$2" backend_host="$3" backend_port="$4"
+	local address
+	address="$(backend_address "$backend_host" "$backend_port")"
 
 	if [ "$HAS_HTTP" != 1 ]; then
 		claim_port "$HTTP_PORT" "the shared Web HTTP listener"
@@ -69,12 +72,14 @@ add_http_route() {
 		printf 'backend be_http_%s\n' "$name"
 		printf '  mode http\n'
 		printf '  option httpchk GET /\n'
-		printf '  server srv1 %s:%s check\n\n' "$backend_host" "$backend_port"
+		printf '  server srv1 %s check\n\n' "$address"
 	} >> "$TMP_HTTP_BACKENDS"
 }
 
 add_https_route() {
 	local name="$1" host="$2" backend_host="$3" backend_port="$4"
+	local address
+	address="$(backend_address "$backend_host" "$backend_port")"
 
 	if [ "$HAS_HTTPS" != 1 ]; then
 		claim_port "$HTTPS_PORT" "the shared Web HTTPS listener"
@@ -85,23 +90,26 @@ add_https_route() {
 	{
 		printf 'backend be_tls_%s\n' "$name"
 		printf '  mode tcp\n'
-		printf '  server srv1 %s:%s check\n\n' "$backend_host" "$backend_port"
+		printf '  server srv1 %s check\n\n' "$address"
 	} >> "$TMP_TLS_BACKENDS"
 }
 
 add_tcp_route() {
 	local name="$1" label="$2" backend_host="$3" public_port="$4" backend_port="$5"
+	local address bind_address
+	address="$(backend_address "$backend_host" "$backend_port")"
+	bind_address="$(backend_address "$WAN_IP" "$public_port")"
 
 	claim_port "$public_port" "service $label"
 	HAS_TCP=1
 	{
 		printf 'frontend fe_tcp_%s\n' "$name"
-		printf '  bind %s:%s\n' "$WAN_IP" "$public_port"
+		printf '  bind %s\n' "$bind_address"
 		printf '  mode tcp\n'
 		printf '  default_backend be_tcp_%s\n\n' "$name"
 		printf 'backend be_tcp_%s\n' "$name"
 		printf '  mode tcp\n'
-		printf '  server srv1 %s:%s check\n\n' "$backend_host" "$backend_port"
+		printf '  server srv1 %s check\n\n' "$address"
 	} >> "$TMP_TCP_FRONTENDS"
 }
 
@@ -183,8 +191,9 @@ fi
 	printf '  option dontlognull\n\n'
 
 	if [ "$HAS_HTTP" = 1 ]; then
+		http_bind="$(backend_address "$WAN_IP" "$HTTP_PORT")"
 		printf 'frontend fe_web_http\n'
-		printf '  bind %s:%s\n' "$WAN_IP" "$HTTP_PORT"
+		printf '  bind %s\n' "$http_bind"
 		printf '  mode http\n'
 		printf '  option httplog\n'
 		cat "$TMP_HTTP_RULES"
@@ -193,8 +202,9 @@ fi
 	fi
 
 	if [ "$HAS_HTTPS" = 1 ]; then
+		https_bind="$(backend_address "$WAN_IP" "$HTTPS_PORT")"
 		printf 'frontend fe_web_https\n'
-		printf '  bind %s:%s\n' "$WAN_IP" "$HTTPS_PORT"
+		printf '  bind %s\n' "$https_bind"
 		printf '  mode tcp\n'
 		printf '  tcp-request inspect-delay 5s\n'
 		printf '  tcp-request content accept if { req.ssl_hello_type 1 }\n'

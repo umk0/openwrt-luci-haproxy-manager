@@ -96,6 +96,51 @@ def check_syntax():
     return errors
 
 
+def check_workflow_contracts():
+    errors = 0
+    resources = PACKAGE / "htdocs" / "luci-static" / "resources"
+
+    for path in resources.rglob("*.js"):
+        source = path.read_text(encoding="utf-8")
+        if "uci.apply(" in source:
+            errors += fail(
+                f"{path.relative_to(ROOT)} uses global rollback-protected uci.apply(); "
+                "use the package-scoped saveAndApply workflow"
+            )
+
+    apply_source = (
+        PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "apply"
+    ).read_text(encoding="utf-8")
+    for required in ("--backup", "restore_on_error", "haproxy-manager.apply"):
+        if required not in apply_source:
+            errors += fail(f"apply helper is missing transaction contract marker: {required}")
+
+    rollback_source = (
+        PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "rollback"
+    ).read_text(encoding="utf-8")
+    if "sleep 2" not in rollback_source or ") >/dev/null 2>&1 &" not in rollback_source:
+        errors += fail("rollback must defer connection-affecting service restarts")
+
+    acl = json.loads(
+        (PACKAGE / "root/usr/share/rpcd/acl.d/luci-app-haproxy-manager.json").read_text(encoding="utf-8")
+    )
+    methods = acl["luci-app-haproxy-manager"]["write"]["ubus"].get("uci", [])
+    if methods != ["commit"]:
+        errors += fail("ACL must grant package-scoped UCI commit access")
+
+    file_exec = acl["luci-app-haproxy-manager"]["write"]["file"]
+    for helper in ("firewall-sync", "migrate", "ports"):
+        path = f"/usr/libexec/haproxy-manager/{helper}"
+        if path in file_exec:
+            errors += fail(f"internal helper must not be directly executable through rpcd: {helper}")
+
+    read_ubus = acl["luci-app-haproxy-manager"]["read"]["ubus"]
+    if "service" in read_ubus:
+        errors += fail("unused service/list rpcd permission must not be granted")
+
+    return errors
+
+
 def check_package_contents():
     errors = 0
     base_packages = sorted(DIST.glob("luci-app-haproxy-manager_*.ipk"))
@@ -145,7 +190,7 @@ def main():
     parser.add_argument("--dist", action="store_true", help="also inspect built ipk artifacts")
     args = parser.parse_args()
 
-    errors = check_translations() + check_syntax()
+    errors = check_translations() + check_syntax() + check_workflow_contracts()
     if args.dist:
         errors += check_package_contents()
 
