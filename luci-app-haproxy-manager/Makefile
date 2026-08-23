@@ -6,7 +6,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_VERSION:=0.5.2
+PKG_VERSION:=0.5.3
 PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=Philipp Shklyaev <job@umk0.ru>
@@ -28,6 +28,7 @@ define Package/luci-app-haproxy-manager/postinst
 	rm -f /tmp/luci-indexcache.* 2>/dev/null || true
 	rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+	/usr/libexec/haproxy-manager/recover package install >/dev/null 2>&1 &
 }
 exit 0
 endef

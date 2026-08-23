@@ -4,6 +4,7 @@ CONFIG=haproxy_manager
 HAPROXY_CFG=/etc/haproxy.cfg
 TMP_CFG=/tmp/haproxy-manager.cfg
 BACKUP_LIMIT=7
+INCIDENT_LIMIT=7
 FIREWALL_RULE_NAME='HAProxy Manager: WAN listeners'
 FIREWALL_DISABLED_PREFIX='HAProxy Manager disabled: '
 
@@ -18,15 +19,29 @@ backup_dir() {
 	uci_get main backup_dir /root/haproxy-manager-backups
 }
 
+incident_dir() {
+	uci_get main incident_dir /root/haproxy-manager-incidents
+}
+
+wan_interface() {
+	local interface
+	interface="$(uci_get main wan_interface wan)"
+	case "$interface" in
+		''|*[!A-Za-z0-9_.-]*) return 1 ;;
+	esac
+	printf '%s\n' "$interface"
+}
+
 wan_ip() {
-	local configured
+	local configured interface
 	configured="$(uci_get main wan_bind_ip auto)"
 	if [ "$configured" != auto ] && [ -n "$configured" ]; then
 		printf '%s\n' "$configured"
 		return 0
 	fi
 
-	ubus call network.interface.wan status 2>/dev/null \
+	interface="$(wan_interface)" || return 1
+	ubus call "network.interface.$interface" status 2>/dev/null \
 		| jsonfilter -e '@["ipv4-address"][0].address' 2>/dev/null \
 		| grep -m1 .
 }

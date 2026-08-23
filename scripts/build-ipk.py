@@ -95,9 +95,12 @@ def walk_payload(roots):
                 dirs.add("./" + "/".join(parts[:i]))
 
             mode = 0o644
-            if "/usr/libexec/haproxy-manager/" in arcname:
+            if "/usr/libexec/haproxy-manager/" in arcname or "/etc/hotplug.d/" in arcname:
                 mode = 0o755
-            files.append((arcname, path, mode, None))
+            data = None
+            if mode == 0o755 or "/etc/config/" in arcname:
+                data = path.read_bytes().replace(b"\r\n", b"\n")
+            files.append((arcname, path, mode, data))
 
     for dirname in sorted(dirs, key=lambda d: (d.count("/"), d)):
         yield (dirname, pathlib.Path(), 0o755, b"", "dir")
@@ -163,6 +166,7 @@ chmod +x /usr/libexec/haproxy-manager/* 2>/dev/null || true
 rm -f /tmp/luci-indexcache.* 2>/dev/null || true
 rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
+/usr/libexec/haproxy-manager/recover package install >/dev/null 2>&1 &
 exit 0
 """
     postrm = """#!/bin/sh

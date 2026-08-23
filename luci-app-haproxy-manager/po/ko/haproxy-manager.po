@@ -390,3 +390,39 @@ msgstr "서비스가 HAProxy와 방화벽에서 즉시 제거됩니다."
 
 msgid "Unable to create a recovery point."
 msgstr "복구 지점을 만들 수 없습니다."
+
+msgid "Automatic recovery"
+msgstr "자동 복구"
+
+msgid "Disabled"
+msgstr "비활성화"
+
+msgid "Failed"
+msgstr "실패"
+
+msgid "If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents."
+msgstr "리스너 주소가 준비되기 전에 HAProxy가 중지되면 네트워크 인터페이스가 올라온 뒤 다시 시작하고 최근 7개 장애의 진단 정보를 보관합니다."
+
+msgid "In progress"
+msgstr "진행 중"
+
+msgid "Invalid configuration"
+msgstr "잘못된 구성"
+
+msgid "Last recovery"
+msgstr "마지막 복구"
+
+msgid "No incidents recorded"
+msgstr "기록된 장애 없음"
+
+msgid "Recover HAProxy after networking becomes ready"
+msgstr "네트워크 준비 후 HAProxy 복구"
+
+msgid "Recovered"
+msgstr "복구됨"
+
+msgid "Recovery point failed"
+msgstr "복구 지점 생성 실패"
+
+msgid "WAN network interface"
+msgstr "WAN 네트워크 인터페이스"

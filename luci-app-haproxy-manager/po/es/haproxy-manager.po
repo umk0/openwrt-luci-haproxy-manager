@@ -390,3 +390,39 @@ msgstr "El servicio se eliminará inmediatamente de HAProxy y del cortafuegos."
 
 msgid "Unable to create a recovery point."
 msgstr "No se pudo crear un punto de recuperación."
+
+msgid "Automatic recovery"
+msgstr "Recuperación automática"
+
+msgid "Disabled"
+msgstr "Desactivada"
+
+msgid "Failed"
+msgstr "Falló"
+
+msgid "If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents."
+msgstr "Si HAProxy se detiene antes de que exista una dirección de escucha, reintentar tras activarse una interfaz de red y conservar el diagnóstico de los siete incidentes más recientes."
+
+msgid "In progress"
+msgstr "En curso"
+
+msgid "Invalid configuration"
+msgstr "Configuración no válida"
+
+msgid "Last recovery"
+msgstr "Última recuperación"
+
+msgid "No incidents recorded"
+msgstr "No se registraron incidentes"
+
+msgid "Recover HAProxy after networking becomes ready"
+msgstr "Recuperar HAProxy cuando la red esté lista"
+
+msgid "Recovered"
+msgstr "Recuperado"
+
+msgid "Recovery point failed"
+msgstr "Error al crear el punto de recuperación"
+
+msgid "WAN network interface"
+msgstr "Interfaz de red WAN"
