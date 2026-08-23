@@ -20,6 +20,11 @@ return view.extend({
 		o = s.option(form.Flag, 'enabled', _('Enable managed configuration'));
 		o.default = '0';
 
+		o = s.option(form.Value, 'wan_interface', _('WAN network interface'));
+		o.default = 'wan';
+		o.datatype = 'uciname';
+		o.rmempty = false;
+
 		o = s.option(form.Value, 'wan_bind_ip', _('WAN bind address'));
 		o.placeholder = _('Automatic');
 		o.default = 'auto';
@@ -75,6 +80,10 @@ return view.extend({
 		s = m.section(form.NamedSection, 'main', 'settings', _('Recovery'));
 		s.anonymous = true;
 		s.description = _('A restorable snapshot is created before migration and every apply.');
+
+		o = s.option(form.Flag, 'auto_recover', _('Recover HAProxy after networking becomes ready'));
+		o.default = '1';
+		o.description = _('If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents.');
 
 		return m.render().then(function(node) {
 			var recoverySection = node.querySelectorAll('.cbi-section');

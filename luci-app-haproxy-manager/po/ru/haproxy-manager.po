@@ -390,3 +390,39 @@ msgstr "Сервис будет немедленно удалён из HAProxy �
 
 msgid "Unable to create a recovery point."
 msgstr "Не удалось создать точку восстановления."
+
+msgid "Automatic recovery"
+msgstr "Автоматическое восстановление"
+
+msgid "Disabled"
+msgstr "Отключено"
+
+msgid "Failed"
+msgstr "Не удалось"
+
+msgid "If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents."
+msgstr "Если HAProxy остановился до появления адреса слушателя, повторить запуск после поднятия сетевого интерфейса и сохранить диагностику семи последних инцидентов."
+
+msgid "In progress"
+msgstr "Выполняется"
+
+msgid "Invalid configuration"
+msgstr "Некорректная конфигурация"
+
+msgid "Last recovery"
+msgstr "Последнее восстановление"
+
+msgid "No incidents recorded"
+msgstr "Срабатываний не зафиксировано"
+
+msgid "Recover HAProxy after networking becomes ready"
+msgstr "Автоматически запускать HAProxy после готовности сети"
+
+msgid "Recovered"
+msgstr "Восстановлено"
+
+msgid "Recovery point failed"
+msgstr "Не удалось создать точку восстановления"
+
+msgid "WAN network interface"
+msgstr "Сетевой интерфейс WAN"

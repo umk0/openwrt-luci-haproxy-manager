@@ -15,6 +15,8 @@ for `/etc/haproxy.cfg`.
 - Custom TCP services with multiple `public:destination` port mappings.
 - Optional WAN firewall rule synchronization and conflict detection.
 - Service changes are validated and applied automatically when saved.
+- HAProxy is recovered after networking becomes ready if an early fixed-address
+  bind fails during router startup.
 - Syntax validation before HAProxy restarts.
 - Named recovery points with one-click restore for HAProxy, firewall, and
   uHTTPd state.
@@ -135,6 +137,8 @@ Emergency rollback over SSH:
 
 Backups are stored in `/root/haproxy-manager-backups` by default. Only the seven
 newest recovery points are retained; older snapshots are removed automatically.
+Before an automatic service recovery, diagnostics are written under
+`/root/haproxy-manager-incidents`; only the seven newest incidents are retained.
 
 ## Development
 

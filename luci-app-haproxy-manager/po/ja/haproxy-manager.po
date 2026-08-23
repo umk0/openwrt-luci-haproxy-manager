@@ -390,3 +390,39 @@ msgstr "サービスは HAProxy とファイアウォールから直ちに削除
 
 msgid "Unable to create a recovery point."
 msgstr "復元ポイントを作成できません。"
+
+msgid "Automatic recovery"
+msgstr "自動復旧"
+
+msgid "Disabled"
+msgstr "無効"
+
+msgid "Failed"
+msgstr "失敗"
+
+msgid "If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents."
+msgstr "リスナーアドレスが利用可能になる前に HAProxy が停止した場合、ネットワークインターフェースの起動後に再試行し、最新 7 件の診断を保存します。"
+
+msgid "In progress"
+msgstr "進行中"
+
+msgid "Invalid configuration"
+msgstr "無効な設定"
+
+msgid "Last recovery"
+msgstr "最終復旧"
+
+msgid "No incidents recorded"
+msgstr "インシデントは記録されていません"
+
+msgid "Recover HAProxy after networking becomes ready"
+msgstr "ネットワーク準備完了後に HAProxy を復旧"
+
+msgid "Recovered"
+msgstr "復旧済み"
+
+msgid "Recovery point failed"
+msgstr "復旧ポイントの作成に失敗"
+
+msgid "WAN network interface"
+msgstr "WAN ネットワークインターフェース"

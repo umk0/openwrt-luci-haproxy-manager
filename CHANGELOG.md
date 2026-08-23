@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.3 - 2026-08-23
+
+- Recover a managed HAProxy instance after network interfaces become ready,
+  preventing a fixed-address bind race during router startup.
+- Retry failed starts without disturbing a healthy process and serialize
+  recovery against normal configuration apply operations.
+- Preserve a recovery point and detailed router diagnostics before restarting;
+  retain the seven latest incident reports and show the latest result in LuCI.
+- Make the logical WAN interface configurable and recover only after that
+  interface is ready, avoiding premature loopback or LAN startup attempts.
+
 ## 0.5.2 - 2026-08-21
 
 - Replace rollback-protected `uci.apply()` with a package-scoped UCI commit to

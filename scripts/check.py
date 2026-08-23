@@ -89,6 +89,13 @@ def check_syntax():
             if result.returncode:
                 errors += fail(f"shell syntax error in {path.relative_to(ROOT)}: {result.stderr.strip()}")
 
+        for path in (PACKAGE / "root" / "etc" / "hotplug.d").rglob("*"):
+            if not path.is_file():
+                continue
+            result = subprocess.run([shell, "-n", str(path)], capture_output=True, text=True)
+            if result.returncode:
+                errors += fail(f"shell syntax error in {path.relative_to(ROOT)}: {result.stderr.strip()}")
+
         result = subprocess.run([shell, "-n", str(ROOT / "scripts" / "build-openwrt-sdk.sh")], capture_output=True, text=True)
         if result.returncode:
             errors += fail(f"shell syntax error in scripts/build-openwrt-sdk.sh: {result.stderr.strip()}")
@@ -138,6 +145,13 @@ def check_workflow_contracts():
     if "service" in read_ubus:
         errors += fail("unused service/list rpcd permission must not be granted")
 
+    recover_source = (
+        PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "recover"
+    ).read_text(encoding="utf-8")
+    for required in ("auto_recover", "haproxy-manager.apply", "haproxy restart", "INCIDENT_LIMIT"):
+        if required not in recover_source:
+            errors += fail(f"automatic recovery is missing contract marker: {required}")
+
     return errors
 
 
@@ -161,6 +175,21 @@ def check_package_contents():
 
         with tarfile.open(fileobj=io.BytesIO(data_member.read()), mode="r:gz") as data_tar:
             payload = set(data_tar.getnames())
+            executable_payload = {
+                name for name in payload
+                if name.startswith("./usr/libexec/haproxy-manager/")
+                or name.startswith("./etc/hotplug.d/")
+            }
+            for name in executable_payload:
+                try:
+                    member = data_tar.getmember(name)
+                    extracted = data_tar.extractfile(member)
+                except KeyError:
+                    continue
+                if member.mode & 0o111 == 0:
+                    errors += fail(f"package script is not executable: {name}")
+                if extracted is not None and b"\r\n" in extracted.read():
+                    errors += fail(f"package script contains CRLF line endings: {name}")
 
     required_payload = {
         "./usr/libexec/haproxy-manager/apply",
@@ -168,7 +197,9 @@ def check_package_contents():
         "./usr/libexec/haproxy-manager/firewall-plan",
         "./usr/libexec/haproxy-manager/firewall-sync",
         "./usr/libexec/haproxy-manager/migrate",
+        "./usr/libexec/haproxy-manager/recover",
         "./usr/libexec/haproxy-manager/status",
+        "./etc/hotplug.d/iface/95-haproxy-manager",
         "./www/luci-static/resources/haproxy-manager/style.css",
         "./www/luci-static/resources/view/haproxy-manager/routes.js",
         "./www/luci-static/resources/view/haproxy-manager/settings.js",

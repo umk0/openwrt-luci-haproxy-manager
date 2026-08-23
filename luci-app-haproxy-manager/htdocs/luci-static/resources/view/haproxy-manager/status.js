@@ -97,6 +97,19 @@ return view.extend({
 		var backups = parseBackups(data[1].stdout);
 		var firewall = parseFirewall(data[2].stdout);
 		var running = status.service == 'running';
+		var autoRecovery = status.auto_recovery != '0';
+		var recoveryResults = {
+			'recovered': _('Recovered'),
+			'failed': _('Failed'),
+			'invalid-config': _('Invalid configuration'),
+			'backup-failed': _('Recovery point failed'),
+			'detected': _('In progress')
+		};
+		var lastRecovery = status.last_incident ? '%s - %s%s'.format(
+			backupDate(status.last_incident),
+			recoveryResults[status.last_incident_result] || status.last_incident_result,
+			status.last_incident_interface ? ' (%s)'.format(status.last_incident_interface) : ''
+		) : _('No incidents recorded');
 		var firewallText = firewall.enabled != '1' ? _('Manual') : +firewall.conflicts > 0 ?
 			_('%d conflicts').format(+firewall.conflicts) : _('Managed');
 		var listeners = status.listeners.map(function(listener) {
@@ -145,6 +158,10 @@ return view.extend({
 				}, running ? _('Running') : _('Stopped'))),
 				statusItem(_('WAN address'), status.wan_ip || _('Not set')),
 				statusItem(_('HAProxy version'), status.version || _('Not available')),
+				statusItem(_('Automatic recovery'), E('span', {
+					'class': 'hm-state %s'.format(autoRecovery ? 'hm-state-on' : 'hm-state-off')
+				}, autoRecovery ? _('Enabled') : _('Disabled'))),
+				statusItem(_('Last recovery'), lastRecovery),
 				statusItem(_('Firewall'), E('span', {
 					'class': 'hm-state %s'.format(+firewall.conflicts > 0 ? 'hm-state-danger' : firewall.enabled == '1' ? 'hm-state-on' : 'hm-state-off')
 				}, firewallText))
