@@ -1,8 +1,12 @@
 #!/bin/sh
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
+umask 077
 
 OUT="${1:-$TMP_CFG}"
+is_safe_temp_path "$OUT" || { echo "Refusing unsafe generated config path: $OUT" >&2; exit 1; }
+[ ! -d "$OUT" ] || { echo "Refusing generated config directory: $OUT" >&2; exit 1; }
+WORK_OUT="$OUT.new.$$"
 ENABLED="$(uci_get main enabled 0)"
 HTTP_PORT="$(uci_get main http_port 80)"
 HTTPS_PORT="$(uci_get main https_port 443)"
@@ -34,7 +38,7 @@ TMP_PORTS=/tmp/haproxy-manager-listen-ports.$$
 : > "$TMP_TLS_BACKENDS"
 : > "$TMP_TCP_FRONTENDS"
 : > "$TMP_PORTS"
-trap 'rm -f "$TMP_HTTP_RULES" "$TMP_HTTP_BACKENDS" "$TMP_TLS_RULES" "$TMP_TLS_BACKENDS" "$TMP_TCP_FRONTENDS" "$TMP_PORTS"' EXIT
+trap 'rm -f "$WORK_OUT" "$TMP_HTTP_RULES" "$TMP_HTTP_BACKENDS" "$TMP_TLS_RULES" "$TMP_TLS_BACKENDS" "$TMP_TCP_FRONTENDS" "$TMP_PORTS"' EXIT
 
 HAS_HTTP=0
 HAS_HTTPS=0
@@ -65,7 +69,7 @@ add_http_route() {
 	fi
 
 	{
-		printf '  acl host_%s hdr(host) -i %s\n' "$name" "$host"
+		printf '  acl host_%s hdr(host),host_only -i %s\n' "$name" "$host"
 		printf '  use_backend be_http_%s if host_%s\n' "$name" "$name"
 	} >> "$TMP_HTTP_RULES"
 	{
@@ -221,6 +225,10 @@ fi
 	printf 'backend be_tls_not_found\n'
 	printf '  mode tcp\n'
 	printf '  tcp-request content reject\n'
-} > "$OUT"
+} > "$WORK_OUT"
+
+# Replace the path itself so a stale symlink cannot redirect this root write.
+rm -f "$OUT"
+mv "$WORK_OUT" "$OUT"
 
 printf '%s\n' "$OUT"

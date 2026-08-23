@@ -112,7 +112,7 @@ def control_file(name, depends, description):
     return f"""Package: {name}
 Version: {VERSION}
 Architecture: {ARCH}
-Maintainer: Philipp <job@umk0.ru>
+Maintainer: Philipp Shklyaev <job@umk0.ru>
 Section: luci
 Priority: optional
 Depends: {depends}
@@ -120,7 +120,7 @@ Description: {description}
 """
 
 
-def build_package(name, depends, description, roots, conffiles=None, postinst=None, postrm=None):
+def build_package(name, depends, description, roots, conffiles=None, postinst=None, prerm=None, postrm=None):
     control_entries = [
         ("./control", pathlib.Path(), 0o644, control_file(name, depends, description).encode()),
     ]
@@ -130,6 +130,9 @@ def build_package(name, depends, description, roots, conffiles=None, postinst=No
 
     if postinst:
         control_entries.append(("./postinst", pathlib.Path(), 0o755, postinst.encode()))
+
+    if prerm:
+        control_entries.append(("./prerm", pathlib.Path(), 0o755, prerm.encode()))
 
     if postrm:
         control_entries.append(("./postrm", pathlib.Path(), 0o755, postrm.encode()))
@@ -176,6 +179,18 @@ rm -rf /tmp/luci-modulecache/ 2>/dev/null || true
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
 exit 0
 """
+    prerm = """#!/bin/sh
+case "${PKG_UPGRADE:-0}:${1:-}" in
+    1:*|*:upgrade) exit 0 ;;
+esac
+[ -n "${IPKG_INSTROOT}" ] || {
+    /usr/libexec/haproxy-manager/uninstall >/dev/null 2>&1 || {
+        logger -t haproxy-manager "Package runtime cleanup failed"
+        exit 1
+    }
+}
+exit 0
+"""
     i18n_post = """#!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] && exit 0
 rm -f /tmp/luci-indexcache.* 2>/dev/null || true
@@ -185,11 +200,12 @@ exit 0
 """
     build_package(
         NAME,
-        "luci-base, rpcd, rpcd-mod-file, haproxy",
-        "LuCI application for managing HAProxy domain routes, raw config, backups, and rollback.",
+        "luci-base, rpcd, rpcd-mod-file, uclient-fetch, haproxy",
+        "Manage Web and TCP HAProxy services, firewall access, and recovery points.",
         ((PKG / "root", "."), (PKG / "htdocs", "./www")),
         conffiles="/etc/config/haproxy_manager\n",
         postinst=postinst,
+        prerm=prerm,
         postrm=postrm,
     )
 

@@ -30,6 +30,20 @@ function parseBackups(output) {
 	}).filter(Boolean);
 }
 
+function parseIncidents(output) {
+	return String(output || '').split(/\r?\n/).map(function(line) {
+		var fields = line.split('\t');
+		return fields[0] == 'incident' ? {
+			id: fields[1],
+			latest: fields[2] == '1',
+			result: fields[3] || '',
+			action: fields[4] || '',
+			interface: fields[5] || '',
+			reason: fields[6] || ''
+		} : null;
+	}).filter(Boolean);
+}
+
 function parseFirewall(output) {
 	var result = { conflicts: '0', enabled: '0', policy: '' };
 	String(output || '').split(/\r?\n/).forEach(function(line) {
@@ -59,8 +73,25 @@ return view.extend({
 				return { stdout: '', stderr: err.message || String(err), code: 1 };
 			}),
 			hmUi.exec('/usr/libexec/haproxy-manager/backups', []).catch(function() { return { stdout: '' }; }),
-			hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() { return { stdout: '' }; })
+			hmUi.exec('/usr/libexec/haproxy-manager/firewall-plan', []).catch(function() { return { stdout: '' }; }),
+			hmUi.exec('/usr/libexec/haproxy-manager/incidents', []).catch(function() { return { stdout: '' }; })
 		]);
+	},
+
+	showIncident: function(incidentId) {
+		return hmUi.exec('/usr/libexec/haproxy-manager/incident', [ incidentId ]).then(function(result) {
+			ui.showModal(_('Incident diagnostics'), [
+				E('p', _('Diagnostic report for %s.').format(backupDate(incidentId))),
+				E('pre', { 'class': 'hm-incident-report' }, result.stdout || _('Not available')),
+				E('div', { 'class': 'right' }, E('button', {
+					'class': 'btn cbi-button cbi-button-action',
+					'type': 'button',
+					'click': ui.hideModal
+				}, _('Close')))
+			]);
+		}).catch(function(err) {
+			hmUi.notifyError(err);
+		});
 	},
 
 	showRestore: function(backupId) {
@@ -96,6 +127,7 @@ return view.extend({
 		var status = parseStatus(res.stdout);
 		var backups = parseBackups(data[1].stdout);
 		var firewall = parseFirewall(data[2].stdout);
+		var incidents = parseIncidents(data[3].stdout);
 		var running = status.service == 'running';
 		var autoRecovery = status.auto_recovery != '0';
 		var recoveryResults = {
@@ -105,6 +137,12 @@ return view.extend({
 			'backup-failed': _('Recovery point failed'),
 			'detected': _('In progress')
 		};
+		recoveryResults.reconciled = _('WAN address reconciled');
+		recoveryResults['rolled-back'] = _('Failed, configuration restored');
+		recoveryResults['rollback-failed'] = _('Failed, restore also failed');
+		recoveryResults['address-unavailable'] = _('WAN address unavailable');
+		recoveryResults['invalid-generated-config'] = _('Generated configuration is invalid');
+		recoveryResults['install-failed'] = _('Configuration installation failed');
 		var lastRecovery = status.last_incident ? '%s - %s%s'.format(
 			backupDate(status.last_incident),
 			recoveryResults[status.last_incident_result] || status.last_incident_result,
@@ -112,6 +150,11 @@ return view.extend({
 		) : _('No incidents recorded');
 		var firewallText = firewall.enabled != '1' ? _('Manual') : +firewall.conflicts > 0 ?
 			_('%d conflicts').format(+firewall.conflicts) : _('Managed');
+		var modes = {
+			generated: _('Generated routes'),
+			raw: _('Raw configuration'),
+			none: _('Not managed')
+		};
 		var listeners = status.listeners.map(function(listener) {
 			return E('tr', { 'class': 'tr' }, [
 				E('td', { 'class': 'td', 'data-title': _('Protocol') }, listener.protocol),
@@ -133,6 +176,23 @@ return view.extend({
 				}, _('Restore')))
 			]);
 		}.bind(this));
+		var incidentRows = incidents.map(function(incident) {
+			var result = recoveryResults[incident.result] || incident.result || _('Not available');
+			var context = [ incident.action, incident.interface ].filter(Boolean).join(' / ');
+			return E('tr', { 'class': 'tr' }, [
+				E('td', { 'class': 'td', 'data-title': _('Created') }, [
+					E('span', backupDate(incident.id)),
+					incident.latest ? E('span', { 'class': 'hm-badge hm-backup-latest' }, _('Latest')) : ''
+				]),
+				E('td', { 'class': 'td', 'data-title': _('Result') }, result),
+				E('td', { 'class': 'td', 'data-title': _('Trigger') }, context || incident.reason || '-'),
+				E('td', { 'class': 'td cbi-section-actions' }, E('button', {
+					'class': 'btn cbi-button cbi-button-action',
+					'type': 'button',
+					'click': ui.createHandlerFn(this, function() { return this.showIncident(incident.id); })
+				}, _('View')))
+			]);
+		}.bind(this));
 
 		hmUi.ensureStyles();
 
@@ -145,6 +205,12 @@ return view.extend({
 		if (!backupRows.length) {
 			backupRows.push(E('tr', { 'class': 'tr placeholder' }, [
 				E('td', { 'class': 'td', 'colspan': '3' }, _('No recovery points yet.'))
+			]));
+		}
+
+		if (!incidentRows.length) {
+			incidentRows.push(E('tr', { 'class': 'tr placeholder' }, [
+				E('td', { 'class': 'td', 'colspan': '4' }, _('No incidents recorded'))
 			]));
 		}
 
@@ -161,6 +227,7 @@ return view.extend({
 				statusItem(_('Automatic recovery'), E('span', {
 					'class': 'hm-state %s'.format(autoRecovery ? 'hm-state-on' : 'hm-state-off')
 				}, autoRecovery ? _('Enabled') : _('Disabled'))),
+				statusItem(_('Configuration mode'), modes[status.active_mode] || status.active_mode || modes.none),
 				statusItem(_('Last recovery'), lastRecovery),
 				statusItem(_('Firewall'), E('span', {
 					'class': 'hm-state %s'.format(+firewall.conflicts > 0 ? 'hm-state-danger' : firewall.enabled == '1' ? 'hm-state-on' : 'hm-state-off')
@@ -174,6 +241,19 @@ return view.extend({
 					E('th', { 'class': 'th' }, _('Process'))
 				]) ]),
 				E('tbody', {}, listeners)
+			]),
+			E('div', { 'class': 'hm-section-heading' }, [
+				E('h3', _('Recovery incidents')),
+				E('p', { 'class': 'cbi-section-descr' }, _('The seven latest automatic recovery reports are retained on the router.'))
+			]),
+			E('table', { 'class': 'table hm-incident-table' }, [
+				E('thead', {}, [ E('tr', { 'class': 'tr table-titles' }, [
+					E('th', { 'class': 'th' }, _('Created')),
+					E('th', { 'class': 'th' }, _('Result')),
+					E('th', { 'class': 'th' }, _('Trigger')),
+					E('th', { 'class': 'th' })
+				]) ]),
+				E('tbody', {}, incidentRows)
 			]),
 			E('div', { 'id': 'recovery', 'class': 'hm-section-heading' }, [
 				E('div', { 'class': 'hm-section-title-row' }, [

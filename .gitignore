@@ -3,6 +3,7 @@
 /dist/
 /openwrt-sdk-*/
 /openwrt-sdk-*.tar.*
+/openwrt-*-rootfs.tar.gz
 /sdk-index.html
 __pycache__/
 *.py[cod]

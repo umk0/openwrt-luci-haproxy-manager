@@ -426,3 +426,74 @@ msgstr "恢复点创建失败"
 
 msgid "WAN network interface"
 msgstr "WAN 网络接口"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Configuration mode"
+msgstr "配置模式"
+
+msgid "Diagnostic report for %s."
+msgstr "%s 的诊断报告。"
+
+msgid "Enter an HTTP or HTTPS URL without spaces."
+msgstr "请输入不含空格的 HTTP 或 HTTPS URL。"
+
+msgid "Failed, configuration restored"
+msgstr "失败，已恢复配置"
+
+msgid "Failed, restore also failed"
+msgstr "失败，恢复操作也失败"
+
+msgid "Generated routes"
+msgstr "生成的路由"
+
+msgid "Incident diagnostics"
+msgstr "事件诊断"
+
+msgid "Not managed"
+msgstr "未管理"
+
+msgid "Raw configuration"
+msgstr "手动配置"
+
+msgid "Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten."
+msgstr "WAN 地址变化后同步生成的监听器，重试已停止的服务，并保留最近七次事件的诊断信息。手动配置绝不会被覆盖。"
+
+msgid "Recovery incidents"
+msgstr "恢复事件"
+
+msgid "Result"
+msgstr "结果"
+
+msgid "Send recovery webhook notifications"
+msgstr "发送恢复 Webhook 通知"
+
+msgid "Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included."
+msgstr "仅发送事件标识符、结果、操作、接口和原因。绝不会包含配置、地址和诊断日志。"
+
+msgid "The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections."
+msgstr "监控所选逻辑接口的地址变化。在多 WAN 配置中，请选择接收公网连接的接口。"
+
+msgid "The seven latest automatic recovery reports are retained on the router."
+msgstr "路由器会保留最近七份自动恢复报告。"
+
+msgid "Trigger"
+msgstr "触发条件"
+
+msgid "View"
+msgstr "查看"
+
+msgid "WAN address reconciled"
+msgstr "WAN 地址已同步"
+
+msgid "WAN address unavailable"
+msgstr "WAN 地址不可用"
+
+msgid "Webhook URL"
+msgstr "Webhook URL"
+msgid "Generated configuration is invalid"
+msgstr "生成的配置无效"
+
+msgid "Configuration installation failed"
+msgstr "配置安装失败"

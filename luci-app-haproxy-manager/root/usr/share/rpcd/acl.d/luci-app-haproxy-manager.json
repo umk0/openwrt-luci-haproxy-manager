@@ -19,6 +19,8 @@
         "/usr/libexec/haproxy-manager/apply": [ "exec" ],
         "/usr/libexec/haproxy-manager/backup": [ "exec" ],
         "/usr/libexec/haproxy-manager/backups": [ "exec" ],
+        "/usr/libexec/haproxy-manager/incidents": [ "exec" ],
+        "/usr/libexec/haproxy-manager/incident": [ "exec" ],
         "/usr/libexec/haproxy-manager/firewall-plan": [ "exec" ],
         "/usr/libexec/haproxy-manager/rollback": [ "exec" ],
         "/usr/libexec/haproxy-manager/validate": [ "exec" ],

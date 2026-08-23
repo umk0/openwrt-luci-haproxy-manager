@@ -1,13 +1,21 @@
 #!/bin/sh
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
+umask 077
 
 CHECK_ONLY=0
-[ "${1:-}" != --check ] || CHECK_ONLY=1
+FORCE_DISABLED=0
+case "${1:-}" in
+	'') ;;
+	--check) CHECK_ONLY=1 ;;
+	--disable) FORCE_DISABLED=1 ;;
+	*) echo "Usage: firewall-sync [--check|--disable]" >&2; exit 1 ;;
+esac
 
 ZONE="$(uci_get main firewall_zone wan)"
 MODE="$(uci_get main firewall_conflict_mode warn)"
 MANAGED="$(uci_get main manage_firewall 0)"
+[ "$FORCE_DISABLED" != 1 ] || MANAGED=0
 PLAN=/tmp/haproxy-manager-firewall-plan.$$
 /usr/libexec/haproxy-manager/firewall-plan > "$PLAN"
 trap 'rm -f "$PLAN"' EXIT

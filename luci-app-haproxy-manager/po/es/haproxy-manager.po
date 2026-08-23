@@ -426,3 +426,74 @@ msgstr "Error al crear el punto de recuperación"
 
 msgid "WAN network interface"
 msgstr "Interfaz de red WAN"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "Configuration mode"
+msgstr "Modo de configuración"
+
+msgid "Diagnostic report for %s."
+msgstr "Informe de diagnóstico de %s."
+
+msgid "Enter an HTTP or HTTPS URL without spaces."
+msgstr "Introduzca una URL HTTP o HTTPS sin espacios."
+
+msgid "Failed, configuration restored"
+msgstr "Error; se restauró la configuración"
+
+msgid "Failed, restore also failed"
+msgstr "Error; la restauración también falló"
+
+msgid "Generated routes"
+msgstr "Rutas generadas"
+
+msgid "Incident diagnostics"
+msgstr "Diagnóstico del incidente"
+
+msgid "Not managed"
+msgstr "No gestionado"
+
+msgid "Raw configuration"
+msgstr "Configuración manual"
+
+msgid "Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten."
+msgstr "Sincroniza los listeners generados tras cambios de la dirección WAN, vuelve a iniciar un servicio detenido y conserva el diagnóstico de los siete incidentes más recientes. Las configuraciones manuales nunca se sobrescriben."
+
+msgid "Recovery incidents"
+msgstr "Incidentes de recuperación"
+
+msgid "Result"
+msgstr "Resultado"
+
+msgid "Send recovery webhook notifications"
+msgstr "Enviar notificaciones webhook de recuperación"
+
+msgid "Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included."
+msgstr "Solo envía el identificador del incidente, el resultado, la acción, la interfaz y el motivo. Nunca incluye la configuración, las direcciones ni los registros de diagnóstico."
+
+msgid "The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections."
+msgstr "Se supervisan los cambios de dirección de la interfaz lógica seleccionada. En configuraciones multi-WAN, seleccione la interfaz que recibe conexiones públicas."
+
+msgid "The seven latest automatic recovery reports are retained on the router."
+msgstr "El router conserva los siete informes de recuperación automática más recientes."
+
+msgid "Trigger"
+msgstr "Desencadenante"
+
+msgid "View"
+msgstr "Ver"
+
+msgid "WAN address reconciled"
+msgstr "Dirección WAN sincronizada"
+
+msgid "WAN address unavailable"
+msgstr "Dirección WAN no disponible"
+
+msgid "Webhook URL"
+msgstr "URL del webhook"
+msgid "Generated configuration is invalid"
+msgstr "La configuración generada no es válida"
+
+msgid "Configuration installation failed"
+msgstr "No se pudo instalar la configuración"

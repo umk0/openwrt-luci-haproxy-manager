@@ -100,6 +100,11 @@ def check_syntax():
         if result.returncode:
             errors += fail(f"shell syntax error in scripts/build-openwrt-sdk.sh: {result.stderr.strip()}")
 
+        for path in (ROOT / "tests").glob("*.sh"):
+            result = subprocess.run([shell, "-n", str(path)], capture_output=True, text=True)
+            if result.returncode:
+                errors += fail(f"shell syntax error in {path.relative_to(ROOT)}: {result.stderr.strip()}")
+
     return errors
 
 
@@ -134,8 +139,13 @@ def check_workflow_contracts():
     ).read_text(encoding="utf-8")
     if "sleep 2" not in rollback_source or ") >/dev/null 2>&1 &" not in rollback_source:
         errors += fail("rollback must defer connection-affecting service restarts")
-    if "while ! mkdir \"$LOCK_DIR\"" not in rollback_source:
+    if "while ! operation_lock_acquire \"$LOCK_DIR\"" not in rollback_source:
         errors += fail("rollback must serialize against apply operations")
+
+    for helper in ("apply", "apply-raw-file", "recover", "rollback"):
+        source = (PACKAGE / "root/usr/libexec/haproxy-manager" / helper).read_text(encoding="utf-8")
+        if "atomic_install_file" not in source:
+            errors += fail(f"configuration writer is not atomic: {helper}")
 
     ui_source = (resources / "haproxy-manager" / "ui.js").read_text(encoding="utf-8")
     if "error.code != null" in ui_source:
@@ -177,6 +187,22 @@ def check_workflow_contracts():
         if required not in recover_source:
             errors += fail(f"automatic recovery is missing contract marker: {required}")
 
+    for helper in ("generate", "validate", "apply-raw-file"):
+        source = (PACKAGE / "root/usr/libexec/haproxy-manager" / helper).read_text(encoding="utf-8")
+        if "is_safe_temp_path" not in source:
+            errors += fail(f"RPC-facing helper does not constrain temporary paths: {helper}")
+
+    uninstall_source = (
+        PACKAGE / "root/usr/libexec/haproxy-manager/uninstall"
+    ).read_text(encoding="utf-8")
+    for required in ("restore_uhttpd_bindings", "firewall-sync --disable", "active_mode"):
+        if required not in uninstall_source:
+            errors += fail(f"uninstall helper is missing ownership cleanup marker: {required}")
+
+    makefile = (PACKAGE / "Makefile").read_text(encoding="utf-8")
+    if "Package/luci-app-haproxy-manager/prerm" not in makefile or "PKG_UPGRADE" not in makefile:
+        errors += fail("package removal must clean runtime state without doing so during upgrades")
+
     return errors
 
 
@@ -197,6 +223,14 @@ def check_package_contents():
         data_member = outer.extractfile("./data.tar.gz")
         if data_member is None:
             return errors + fail("ipk data.tar.gz cannot be read")
+
+        control_member = outer.extractfile("./control.tar.gz")
+        if control_member is None:
+            return errors + fail("ipk control.tar.gz cannot be read")
+        with tarfile.open(fileobj=io.BytesIO(control_member.read()), mode="r:gz") as control_tar:
+            control_names = set(control_tar.getnames())
+            if "./prerm" not in control_names:
+                errors += fail("portable ipk is missing the removal cleanup script")
 
         with tarfile.open(fileobj=io.BytesIO(data_member.read()), mode="r:gz") as data_tar:
             payload = set(data_tar.getnames())
@@ -221,9 +255,13 @@ def check_package_contents():
         "./usr/libexec/haproxy-manager/backups",
         "./usr/libexec/haproxy-manager/firewall-plan",
         "./usr/libexec/haproxy-manager/firewall-sync",
+        "./usr/libexec/haproxy-manager/incident",
+        "./usr/libexec/haproxy-manager/incidents",
         "./usr/libexec/haproxy-manager/migrate",
+        "./usr/libexec/haproxy-manager/notify",
         "./usr/libexec/haproxy-manager/recover",
         "./usr/libexec/haproxy-manager/status",
+        "./usr/libexec/haproxy-manager/uninstall",
         "./etc/hotplug.d/iface/95-haproxy-manager",
         "./www/luci-static/resources/haproxy-manager/style.css",
         "./www/luci-static/resources/view/haproxy-manager/routes.js",

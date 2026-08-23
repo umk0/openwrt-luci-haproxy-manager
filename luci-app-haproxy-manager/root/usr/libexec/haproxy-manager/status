@@ -7,6 +7,7 @@ version="not-available"
 service="stopped"
 backup_count=0
 auto_recovery="$(uci_get main auto_recover 1)"
+mode="$(active_mode)"
 last_incident=""
 last_incident_result="none"
 last_incident_interface=""
@@ -23,6 +24,9 @@ fi
 backup_count="$(/usr/libexec/haproxy-manager/backups 2>/dev/null | wc -l | tr -d ' ')"
 
 INCIDENT_BASE="$(incident_dir)"
+if [ -d "$INCIDENT_BASE" ]; then
+	INCIDENT_BASE="$(resolve_storage_dir "$INCIDENT_BASE")" || INCIDENT_BASE=""
+fi
 if [ -f "$INCIDENT_BASE/LAST" ]; then
 	last_incident="$(sed -n '1p' "$INCIDENT_BASE/LAST")"
 	if is_valid_backup_id "$last_incident" && [ -d "$INCIDENT_BASE/$last_incident" ]; then
@@ -40,6 +44,7 @@ printf 'version\t%s\n' "$version"
 printf 'service\t%s\n' "$service"
 printf 'backup_count\t%s\n' "$backup_count"
 printf 'auto_recovery\t%s\n' "$auto_recovery"
+printf 'active_mode\t%s\n' "$mode"
 printf 'last_incident\t%s\n' "$last_incident"
 printf 'last_incident_result\t%s\n' "$last_incident_result"
 printf 'last_incident_interface\t%s\n' "$last_incident_interface"

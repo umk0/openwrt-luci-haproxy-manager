@@ -426,3 +426,74 @@ msgstr "Не удалось создать точку восстановлени
 
 msgid "WAN network interface"
 msgstr "Сетевой интерфейс WAN"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Configuration mode"
+msgstr "Режим конфигурации"
+
+msgid "Diagnostic report for %s."
+msgstr "Диагностический отчёт для %s."
+
+msgid "Enter an HTTP or HTTPS URL without spaces."
+msgstr "Введите HTTP- или HTTPS-адрес без пробелов."
+
+msgid "Failed, configuration restored"
+msgstr "Ошибка, конфигурация восстановлена"
+
+msgid "Failed, restore also failed"
+msgstr "Ошибка, восстановление также не удалось"
+
+msgid "Generated routes"
+msgstr "Сгенерированные маршруты"
+
+msgid "Incident diagnostics"
+msgstr "Диагностика инцидента"
+
+msgid "Not managed"
+msgstr "Не управляется"
+
+msgid "Raw configuration"
+msgstr "Пользовательская конфигурация"
+
+msgid "Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten."
+msgstr "Синхронизирует сгенерированные слушатели после смены WAN-адреса, повторно запускает остановленную службу и хранит диагностику семи последних инцидентов. Пользовательские конфигурации никогда не перезаписываются."
+
+msgid "Recovery incidents"
+msgstr "Инциденты восстановления"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Send recovery webhook notifications"
+msgstr "Отправлять webhook-уведомления о восстановлении"
+
+msgid "Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included."
+msgstr "Отправляются только идентификатор инцидента, результат, действие, интерфейс и причина. Конфигурация, адреса и диагностические журналы никогда не передаются."
+
+msgid "The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections."
+msgstr "Выбранный логический интерфейс отслеживается на предмет смены адреса. В конфигурациях с несколькими WAN выберите интерфейс, принимающий публичные подключения."
+
+msgid "The seven latest automatic recovery reports are retained on the router."
+msgstr "На маршрутизаторе хранятся семь последних отчётов автоматического восстановления."
+
+msgid "Trigger"
+msgstr "Событие"
+
+msgid "View"
+msgstr "Просмотреть"
+
+msgid "WAN address reconciled"
+msgstr "WAN-адрес синхронизирован"
+
+msgid "WAN address unavailable"
+msgstr "WAN-адрес недоступен"
+
+msgid "Webhook URL"
+msgstr "URL webhook"
+msgid "Generated configuration is invalid"
+msgstr "Сгенерированная конфигурация недействительна"
+
+msgid "Configuration installation failed"
+msgstr "Не удалось установить конфигурацию"

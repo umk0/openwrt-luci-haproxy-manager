@@ -16,10 +16,13 @@ for `/etc/haproxy.cfg`.
 - Optional WAN firewall rule synchronization and conflict detection.
 - Service changes are validated and applied automatically when saved.
 - HAProxy is recovered after networking becomes ready if an early fixed-address
-  bind fails during router startup.
+  bind fails during router startup, and generated listeners are reconciled after
+  a dynamic WAN address change.
 - Syntax validation before HAProxy restarts.
 - Named recovery points with one-click restore for HAProxy, firewall, and
   uHTTPd state.
+- Seven bounded incident reports with in-LuCI diagnostics and optional redacted
+  webhook notifications.
 - Optional uHTTPd binding to the LAN address so HAProxy can own WAN ports 80/443.
 - Responsive LuCI views built from standard theme classes.
 - English base package with optional Russian, Spanish, Korean, Japanese, and
@@ -109,7 +112,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-openwrt-sdk-docker.ps1 
 
 Build outputs are copied to `dist/`. GitHub Actions validates the latest 24.10
 and 25.12 SDKs on x86_64, ARM64, and MIPS for pushes, pull requests, manual runs,
-and a weekly schedule. Tags matching `v*` create a GitHub Release containing:
+and a weekly schedule. It also installs the x86_64 artifacts into the matching
+official OpenWrt root filesystems and exercises apply, raw mode, WAN address
+changes, forced restart failure, rollback, retention, and removal cleanup. Tags
+matching `v*` create a GitHub Release containing:
 
 - individual base and language packages;
 - separate IPK and APK ZIP bundles;
@@ -139,6 +145,12 @@ Backups are stored in `/root/haproxy-manager-backups` by default. Only the seven
 newest recovery points are retained; older snapshots are removed automatically.
 Before an automatic service recovery, diagnostics are written under
 `/root/haproxy-manager-incidents`; only the seven newest incidents are retained.
+The reports can be viewed on the Status page. Webhook payloads never contain
+addresses, configuration, or diagnostic logs.
+
+See [Operations](docs/OPERATIONS.md) for first-run, multi-WAN, upgrade, removal,
+monitoring, and emergency recovery procedures. See [Security](SECURITY.md) for
+the trust model and vulnerability reporting.
 
 ## Development
 

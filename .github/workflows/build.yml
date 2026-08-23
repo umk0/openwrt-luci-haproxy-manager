@@ -84,10 +84,102 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  runtime:
+    name: Runtime ${{ matrix.series }} / x86_64
+    needs: [releases, sdk]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - series: "24.10"
+            format: ipk
+          - series: "25.12"
+            format: apk
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: packages-${{ matrix.series }}-x86-64
+          path: runtime-packages
+      - name: Run lifecycle and failure-injection tests
+        env:
+          OPENWRT_VERSION: ${{ matrix.series == '24.10' && needs.releases.outputs.legacy_version || needs.releases.outputs.modern_version }}
+          PACKAGE_FORMAT: ${{ matrix.format }}
+        run: |
+          set -eux
+          rootfs="openwrt-${OPENWRT_VERSION}-x86-64-rootfs.tar.gz"
+          base_url="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets/x86/64"
+          curl -fsSLO "$base_url/$rootfs"
+          curl -fsSL -o sha256sums "$base_url/sha256sums"
+          grep -F " *$rootfs" sha256sums > rootfs.sha256
+          sha256sum --check rootfs.sha256
+          docker import "$rootfs" "haproxy-manager-openwrt:${OPENWRT_VERSION}"
+          docker run -d --name haproxy-manager-runtime \
+            -v "$GITHUB_WORKSPACE:/ci" \
+            "haproxy-manager-openwrt:${OPENWRT_VERSION}" \
+            /bin/sh -c 'while :; do sleep 3600; done'
+          cleanup() {
+            docker logs haproxy-manager-runtime || true
+            docker rm -f haproxy-manager-runtime || true
+          }
+          trap cleanup EXIT
+          docker exec haproxy-manager-runtime mkdir -p /var/lock
+          if [ "$PACKAGE_FORMAT" = ipk ]; then
+            package="$(find runtime-packages -type f -name 'luci-app-haproxy-manager_*.ipk' | head -n1)"
+            language="$(find runtime-packages -type f -name 'luci-i18n-haproxy-manager-ru_*.ipk' | head -n1)"
+            test -n "$package" && test -n "$language"
+            previous="runtime-packages/luci-app-haproxy-manager_0.5.4-r1_all.ipk"
+            curl -fsSL -o "$previous" \
+              "https://github.com/umk0/openwrt-luci-haproxy-manager/releases/download/v0.5.4/$(basename "$previous")"
+            docker exec haproxy-manager-runtime opkg update
+            docker exec haproxy-manager-runtime opkg install "/ci/$previous"
+            docker exec haproxy-manager-runtime sh -c \
+              'uci set haproxy_manager.main.upgrade_marker=preserve-me; uci commit haproxy_manager'
+            docker exec haproxy-manager-runtime opkg install "/ci/$package"
+            docker exec haproxy-manager-runtime opkg install "/ci/$language"
+          else
+            package="$(find runtime-packages -type f -name 'luci-app-haproxy-manager-*.apk' | head -n1)"
+            language="$(find runtime-packages -type f -name 'luci-i18n-haproxy-manager-ru-*.apk' | head -n1)"
+            test -n "$package" && test -n "$language"
+            previous="runtime-packages/luci-app-haproxy-manager-0.5.4-r1.apk"
+            curl -fsSL -o "$previous" \
+              "https://github.com/umk0/openwrt-luci-haproxy-manager/releases/download/v0.5.4/$(basename "$previous")"
+            docker exec haproxy-manager-runtime apk update
+            docker exec haproxy-manager-runtime apk add --allow-untrusted "/ci/$previous"
+            docker exec haproxy-manager-runtime sh -c \
+              'uci set haproxy_manager.main.upgrade_marker=preserve-me; uci commit haproxy_manager'
+            docker exec haproxy-manager-runtime apk add --allow-untrusted "/ci/$package"
+            docker exec haproxy-manager-runtime apk add --allow-untrusted "/ci/$language"
+          fi
+          docker exec haproxy-manager-runtime sh -c \
+            'test "$(uci -q get haproxy_manager.main.upgrade_marker)" = preserve-me'
+          docker exec haproxy-manager-runtime sh -c \
+            'test "$(uci -q get haproxy_manager.main.schema_version)" = 3'
+          docker exec haproxy-manager-runtime test -s /www/luci-static/resources/view/haproxy-manager/routes.js
+          docker exec haproxy-manager-runtime sh /ci/tests/openwrt-runtime.sh
+          docker exec haproxy-manager-runtime sh -c \
+            '/usr/libexec/haproxy-manager/apply >/dev/null; sleep 3'
+          if [ "$PACKAGE_FORMAT" = ipk ]; then
+            docker exec haproxy-manager-runtime opkg remove \
+              luci-i18n-haproxy-manager-ru luci-app-haproxy-manager
+          else
+            docker exec haproxy-manager-runtime apk del \
+              luci-i18n-haproxy-manager-ru luci-app-haproxy-manager
+          fi
+          docker exec haproxy-manager-runtime sh -c \
+            'uci -q get uhttpd.main.listen_http | grep -F 0.0.0.0:80'
+          docker exec haproxy-manager-runtime sh -c \
+            'test "$(uci -q get firewall.@redirect[0].enabled)" = 1'
+          docker exec haproxy-manager-runtime sh -c \
+            '! /etc/init.d/haproxy enabled && ! /etc/init.d/haproxy status'
+          docker exec haproxy-manager-runtime test ! -e /usr/libexec/haproxy-manager/apply
+
   release:
     name: Publish GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [releases, sdk]
+    needs: [releases, sdk, runtime]
     runs-on: ubuntu-latest
     permissions:
       contents: write
