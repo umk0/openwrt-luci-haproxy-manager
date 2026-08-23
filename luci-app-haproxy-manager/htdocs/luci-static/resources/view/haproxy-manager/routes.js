@@ -309,14 +309,11 @@ return view.extend({
 				applied(reload);
 			}).catch(function(error) {
 				hmUi.notifyError(error);
-				if (reload)
-					hmUi.reloadAfterApply(3500);
 			});
 		}
 
 		var baseHandleDrop = s.handleDrop;
 		var baseHandleTouchEnd = s.handleTouchEnd;
-		var baseHandleSort = s.handleSort;
 
 		s.handleModalSave = function(modalMap, ev) {
 			var mapNode = this.getActiveModalMap();
@@ -361,7 +358,8 @@ return view.extend({
 		}
 
 		s.handleDrop = function(ev) {
-			var shouldApply = !!(ev.currentTarget && ev.currentTarget.querySelector('.drag-over-above, .drag-over-below'));
+			var shouldApply = !!(ev.currentTarget && ev.currentTarget.matches &&
+				ev.currentTarget.matches('.drag-over-above, .drag-over-below'));
 			var result = baseHandleDrop.call(this, ev);
 			if (shouldApply)
 				applyReorder();
@@ -379,11 +377,33 @@ return view.extend({
 		};
 
 		s.handleSort = function(ev) {
-			var shouldApply = !!(ev.target && ev.target.closest && ev.target.closest('th[data-sortable-row]'));
-			var result = baseHandleSort.call(this, ev);
-			if (shouldApply)
-				applyReorder();
-			return result;
+			var th = ev.target && ev.target.closest ? ev.target.closest('th[data-sortable-row]') : null;
+			if (!th)
+				return;
+
+			var descending = th.getAttribute('data-sort-direction') == 'desc';
+			var headerRow = ev.currentTarget;
+			var index = Array.prototype.indexOf.call(headerRow.querySelectorAll('th'), th);
+			var table = headerRow.closest('table') || headerRow.parentNode;
+			var body = table.tBodies && table.tBodies[0] ? table.tBodies[0] : table;
+			var rows = Array.prototype.slice.call(table.querySelectorAll('tr.cbi-section-table-row'));
+
+			headerRow.querySelectorAll('th').forEach(function(other) {
+				if (other !== th)
+					other.removeAttribute('data-sort-direction');
+			});
+
+			rows.sort(function(a, b) {
+				var left = a.childNodes[index] ? a.childNodes[index].textContent.trim() : '';
+				var right = b.childNodes[index] ? b.childNodes[index].textContent.trim() : '';
+				var order = L.naturalCompare(left, right);
+				return descending ? -order : order;
+			});
+
+			window.requestAnimationFrame(function() {
+				rows.forEach(function(row) { body.appendChild(row); });
+				th.setAttribute('data-sort-direction', descending ? 'asc' : 'desc');
+			});
 		};
 
 		return m.render().then(function(node) {

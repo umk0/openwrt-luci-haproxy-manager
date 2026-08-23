@@ -51,8 +51,14 @@ mkdir -p "$BASE"
 BASE="$(cd "$BASE" && pwd -P)"
 ID="$(date +%Y%m%d-%H%M%S)"
 INCIDENT="$BASE/$ID"
+attempt=1
 while ! mkdir "$INCIDENT" 2>/dev/null; do
+	[ "$attempt" -lt 5 ] || {
+		logger -t haproxy-manager "Cannot create incident report in $BASE"
+		exit 1
+	}
 	sleep 1
+	attempt=$((attempt + 1))
 	ID="$(date +%Y%m%d-%H%M%S)"
 	INCIDENT="$BASE/$ID"
 done

@@ -67,7 +67,7 @@ return baseclass.extend({
 			committed = true;
 			return this.exec('/usr/libexec/haproxy-manager/apply', [ '--backup', backupId ]);
 		}.bind(this)).catch(function(error) {
-			if (!committed || !backupId || error.code != null)
+			if (!committed || !backupId)
 				throw error;
 
 			return this.exec('/usr/libexec/haproxy-manager/rollback', [ backupId ]).catch(function() {

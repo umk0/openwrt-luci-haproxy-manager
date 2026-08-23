@@ -118,7 +118,14 @@ def check_workflow_contracts():
     apply_source = (
         PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "apply"
     ).read_text(encoding="utf-8")
-    for required in ("--backup", "restore_on_error", "haproxy-manager.apply"):
+    for required in (
+        "--backup",
+        "restore_on_error",
+        "haproxy-manager.apply",
+        "capture_uhttpd_bindings",
+        "restore_uhttpd_bindings",
+        "rollback --sync",
+    ):
         if required not in apply_source:
             errors += fail(f"apply helper is missing transaction contract marker: {required}")
 
@@ -127,6 +134,24 @@ def check_workflow_contracts():
     ).read_text(encoding="utf-8")
     if "sleep 2" not in rollback_source or ") >/dev/null 2>&1 &" not in rollback_source:
         errors += fail("rollback must defer connection-affecting service restarts")
+    if "while ! mkdir \"$LOCK_DIR\"" not in rollback_source:
+        errors += fail("rollback must serialize against apply operations")
+
+    ui_source = (resources / "haproxy-manager" / "ui.js").read_text(encoding="utf-8")
+    if "error.code != null" in ui_source:
+        errors += fail("frontend must restore committed UCI after every apply helper failure")
+
+    routes_source = (resources / "view" / "haproxy-manager" / "routes.js").read_text(encoding="utf-8")
+    if "currentTarget.querySelector('.drag-over-above" in routes_source:
+        errors += fail("drag-and-drop apply guard must inspect the target row itself")
+    if "baseHandleSort" in routes_source or "this.map.data.move" in routes_source:
+        errors += fail("visual table sorting must not persist route order or restart HAProxy")
+
+    backup_source = (
+        PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "backup"
+    ).read_text(encoding="utf-8")
+    if "attempt\" -lt" not in backup_source:
+        errors += fail("recovery-point creation retries must be bounded")
 
     acl = json.loads(
         (PACKAGE / "root/usr/share/rpcd/acl.d/luci-app-haproxy-manager.json").read_text(encoding="utf-8")

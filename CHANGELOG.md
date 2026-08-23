@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.4 - 2026-08-23
+
+- Keep failed apply diagnostics visible instead of reloading the LuCI page and
+  always restore the pre-change recovery point after helper failures.
+- Apply drag-and-drop ordering reliably without restarting HAProxy when a user
+  only sorts a table column for viewing.
+- Preserve and restore the original uHTTPd listener addresses when HAProxy
+  Manager takes or releases ownership of the LuCI bind configuration.
+- Hold the apply lock through deferred uHTTPd and HAProxy service actions, fix
+  firewall conflict commits, and bound recovery-point and incident retries.
+
 ## 0.5.3 - 2026-08-23
 
 - Recover a managed HAProxy instance after network interfaces become ready,
