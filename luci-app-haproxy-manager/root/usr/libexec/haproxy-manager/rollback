@@ -2,7 +2,34 @@
 set -eu
 . /usr/libexec/haproxy-manager/common.sh
 
-TARGET="${1:-last}"
+SYNC=0
+LOCK_DIR=/var/lock/haproxy-manager.apply
+LOCK_HELD=0
+
+if [ "${1:-}" = --sync ]; then
+	[ "$#" -eq 2 ] || { echo "Usage: rollback [--sync] [last|YYYYMMDD-HHMMSS]" >&2; exit 1; }
+	SYNC=1
+	TARGET="$2"
+else
+	[ "$#" -le 1 ] || { echo "Usage: rollback [--sync] [last|YYYYMMDD-HHMMSS]" >&2; exit 1; }
+	TARGET="${1:-last}"
+fi
+
+release_lock() {
+	[ "$LOCK_HELD" != 1 ] || rmdir "$LOCK_DIR" 2>/dev/null || true
+}
+
+if [ "$SYNC" != 1 ]; then
+	attempt=0
+	while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+		[ "$attempt" -lt 15 ] || { echo "Another HAProxy Manager operation is still running." >&2; exit 1; }
+		attempt=$((attempt + 1))
+		sleep 1
+	done
+	LOCK_HELD=1
+	trap 'status=$?; release_lock; exit "$status"' EXIT
+fi
+
 BASE="$(backup_dir)"
 
 if [ "$TARGET" = last ]; then
@@ -43,14 +70,25 @@ else
 	/etc/init.d/haproxy disable >/dev/null 2>&1 || true
 fi
 
-(
-	sleep 2
+restore_services() {
 	[ "$uhttpd_changed" != 1 ] || /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 	if [ "$haproxy_running" = 1 ]; then
 		/etc/init.d/haproxy restart >/dev/null 2>&1 || true
 	else
 		/etc/init.d/haproxy stop >/dev/null 2>&1 || true
 	fi
-) >/dev/null 2>&1 &
+}
+
+if [ "$SYNC" = 1 ]; then
+	restore_services
+else
+	LOCK_HELD=0
+	trap - EXIT
+	(
+		sleep 2
+		restore_services
+		rmdir "$LOCK_DIR" 2>/dev/null || true
+	) >/dev/null 2>&1 &
+fi
 
 echo "Restored backup $TARGET. Affected services will reload shortly."

@@ -52,7 +52,7 @@ for redirect in $(uci -q show firewall | sed -n 's/^firewall\.\(@redirect\[[0-9]
 done
 
 if [ "$MANAGED" = 1 ] && [ "$MODE" = disable ]; then
-	awk -F '\t' '$1 == "conflict" { print $2 }' "$PLAN" | while read -r redirect; do
+	for redirect in $(awk -F '\t' '$1 == "conflict" { print $2 }' "$PLAN"); do
 		[ -n "$redirect" ] || continue
 		name="$(uci -q get "firewall.$redirect.name" 2>/dev/null || true)"
 		case "$name" in

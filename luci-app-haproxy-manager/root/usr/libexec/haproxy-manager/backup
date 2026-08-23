@@ -8,8 +8,14 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BASE"
 BASE="$(cd "$BASE" && pwd -P)"
 DIR="$BASE/$STAMP"
+attempt=1
 while ! mkdir "$DIR" 2>/dev/null; do
+	[ "$attempt" -lt 5 ] || {
+		echo "Cannot create recovery point in $BASE after $attempt attempts" >&2
+		exit 1
+	}
 	sleep 1
+	attempt=$((attempt + 1))
 	STAMP="$(date +%Y%m%d-%H%M%S)"
 	DIR="$BASE/$STAMP"
 done

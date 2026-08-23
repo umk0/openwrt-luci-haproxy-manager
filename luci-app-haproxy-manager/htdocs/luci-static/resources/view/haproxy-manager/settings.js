@@ -108,7 +108,6 @@ return view.extend({
 							hmUi.reloadAfterApply();
 						}).catch(function(err) {
 							hmUi.notifyError(err);
-							hmUi.reloadAfterApply(3500);
 						});
 					})
 				}, _('Save settings'))
