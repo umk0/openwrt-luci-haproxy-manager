@@ -426,3 +426,74 @@ msgstr "복구 지점 생성 실패"
 
 msgid "WAN network interface"
 msgstr "WAN 네트워크 인터페이스"
+
+msgid "Close"
+msgstr "닫기"
+
+msgid "Configuration mode"
+msgstr "구성 모드"
+
+msgid "Diagnostic report for %s."
+msgstr "%s 진단 보고서입니다."
+
+msgid "Enter an HTTP or HTTPS URL without spaces."
+msgstr "공백 없이 HTTP 또는 HTTPS URL을 입력하십시오."
+
+msgid "Failed, configuration restored"
+msgstr "실패하여 구성을 복원함"
+
+msgid "Failed, restore also failed"
+msgstr "실패했으며 복원도 실패함"
+
+msgid "Generated routes"
+msgstr "생성된 경로"
+
+msgid "Incident diagnostics"
+msgstr "장애 진단"
+
+msgid "Not managed"
+msgstr "관리되지 않음"
+
+msgid "Raw configuration"
+msgstr "수동 구성"
+
+msgid "Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten."
+msgstr "WAN 주소 변경 후 생성된 리스너를 동기화하고 중지된 서비스를 다시 시작하며 최근 7개 장애의 진단을 보관합니다. 수동 구성은 절대 덮어쓰지 않습니다."
+
+msgid "Recovery incidents"
+msgstr "복구 장애"
+
+msgid "Result"
+msgstr "결과"
+
+msgid "Send recovery webhook notifications"
+msgstr "복구 웹훅 알림 보내기"
+
+msgid "Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included."
+msgstr "장애 식별자, 결과, 작업, 인터페이스 및 원인만 전송합니다. 구성, 주소 및 진단 로그는 포함하지 않습니다."
+
+msgid "The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections."
+msgstr "선택한 논리 인터페이스의 주소 변경을 감시합니다. 다중 WAN 구성에서는 외부 연결을 수신하는 인터페이스를 선택하십시오."
+
+msgid "The seven latest automatic recovery reports are retained on the router."
+msgstr "최근 7개의 자동 복구 보고서가 라우터에 보관됩니다."
+
+msgid "Trigger"
+msgstr "트리거"
+
+msgid "View"
+msgstr "보기"
+
+msgid "WAN address reconciled"
+msgstr "WAN 주소 동기화됨"
+
+msgid "WAN address unavailable"
+msgstr "WAN 주소를 사용할 수 없음"
+
+msgid "Webhook URL"
+msgstr "웹훅 URL"
+msgid "Generated configuration is invalid"
+msgstr "생성된 구성이 유효하지 않음"
+
+msgid "Configuration installation failed"
+msgstr "구성을 설치하지 못함"

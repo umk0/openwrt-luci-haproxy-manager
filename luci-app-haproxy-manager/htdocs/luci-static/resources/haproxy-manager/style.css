@@ -129,6 +129,15 @@
 	word-break: break-word;
 }
 
+.hm-incident-report {
+	box-sizing: border-box;
+	max-height: min(60vh, 36rem);
+	margin: 1rem 0;
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
 .hm-inline-alert {
 	margin-bottom: 1rem;
 }

@@ -24,6 +24,7 @@ return view.extend({
 		o.default = 'wan';
 		o.datatype = 'uciname';
 		o.rmempty = false;
+		o.description = _('The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections.');
 
 		o = s.option(form.Value, 'wan_bind_ip', _('WAN bind address'));
 		o.placeholder = _('Automatic');
@@ -83,7 +84,19 @@ return view.extend({
 
 		o = s.option(form.Flag, 'auto_recover', _('Recover HAProxy after networking becomes ready'));
 		o.default = '1';
-		o.description = _('If HAProxy stops before a listener address exists, retry it after a network interface comes up and retain diagnostics for the seven latest incidents.');
+		o.description = _('Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten.');
+
+		o = s.option(form.Flag, 'webhook_enabled', _('Send recovery webhook notifications'));
+		o.default = '0';
+		o.description = _('Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included.');
+
+		o = s.option(form.Value, 'webhook_url', _('Webhook URL'));
+		o.password = true;
+		o.rmempty = false;
+		o.depends('webhook_enabled', '1');
+		o.validate = function(sectionId, value) {
+			return /^https?:\/\/[^/\s]+(?:\/\S*)?$/.test(value || '') || _('Enter an HTTP or HTTPS URL without spaces.');
+		};
 
 		return m.render().then(function(node) {
 			var recoverySection = node.querySelectorAll('.cbi-section');

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 - 2026-08-23
+
+- Reconcile generated listeners after dynamic WAN address changes while keeping
+  raw configurations untouched, and expose the active ownership mode in LuCI.
+- Retain seven bounded recovery incidents with in-LuCI diagnostics and optional
+  redacted webhook notifications.
+- Make configuration replacement atomic, serialize apply/recovery/rollback,
+  reject unsafe storage paths, and report failed service restoration honestly.
+- Restore package-owned uHTTPd and firewall state during removal, stop active
+  generated or raw HAProxy instances, and retain user configuration and reports.
+- Add exact OpenWrt 24.10 and 25.12 install, upgrade, failure-injection,
+  retention, and removal tests to GitHub Actions.
+- Document first-run setup, multi-WAN behavior, monitoring, upgrades, removal,
+  and emergency recovery.
+
 ## 0.5.4 - 2026-08-23
 
 - Keep failed apply diagnostics visible instead of reloading the LuCI page and

@@ -426,3 +426,74 @@ msgstr "復旧ポイントの作成に失敗"
 
 msgid "WAN network interface"
 msgstr "WAN ネットワークインターフェース"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Configuration mode"
+msgstr "設定モード"
+
+msgid "Diagnostic report for %s."
+msgstr "%s の診断レポートです。"
+
+msgid "Enter an HTTP or HTTPS URL without spaces."
+msgstr "空白を含まない HTTP または HTTPS URL を入力してください。"
+
+msgid "Failed, configuration restored"
+msgstr "失敗したため設定を復元しました"
+
+msgid "Failed, restore also failed"
+msgstr "失敗し、復元にも失敗しました"
+
+msgid "Generated routes"
+msgstr "生成されたルート"
+
+msgid "Incident diagnostics"
+msgstr "インシデント診断"
+
+msgid "Not managed"
+msgstr "管理対象外"
+
+msgid "Raw configuration"
+msgstr "手動設定"
+
+msgid "Reconciles generated listeners after WAN address changes, retries a stopped service, and retains diagnostics for the seven latest incidents. Raw configurations are never overwritten."
+msgstr "WAN アドレスの変更後に生成済みリスナーを同期し、停止したサービスを再試行して、直近 7 件のインシデント診断を保持します。手動設定は上書きされません。"
+
+msgid "Recovery incidents"
+msgstr "復旧インシデント"
+
+msgid "Result"
+msgstr "結果"
+
+msgid "Send recovery webhook notifications"
+msgstr "復旧 Webhook 通知を送信"
+
+msgid "Sends only the incident identifier, result, action, interface, and reason. Configuration, addresses, and diagnostic logs are never included."
+msgstr "インシデント ID、結果、アクション、インターフェース、理由のみを送信します。設定、アドレス、診断ログは含まれません。"
+
+msgid "The selected logical interface is monitored for address changes. In multi-WAN setups, select the interface that receives public connections."
+msgstr "選択した論理インターフェースのアドレス変更を監視します。マルチ WAN 構成では、外部接続を受信するインターフェースを選択してください。"
+
+msgid "The seven latest automatic recovery reports are retained on the router."
+msgstr "直近 7 件の自動復旧レポートがルーターに保持されます。"
+
+msgid "Trigger"
+msgstr "トリガー"
+
+msgid "View"
+msgstr "表示"
+
+msgid "WAN address reconciled"
+msgstr "WAN アドレスを同期しました"
+
+msgid "WAN address unavailable"
+msgstr "WAN アドレスを利用できません"
+
+msgid "Webhook URL"
+msgstr "Webhook URL"
+msgid "Generated configuration is invalid"
+msgstr "生成された設定が無効です"
+
+msgid "Configuration installation failed"
+msgstr "設定のインストールに失敗しました"

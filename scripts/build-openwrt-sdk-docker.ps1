@@ -10,6 +10,11 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ArchivePath = (Resolve-Path $SdkArchive).Path
 $ArchiveName = Split-Path $ArchivePath -Leaf
+$SeriesMatch = [regex]::Match($ArchiveName, '^openwrt-sdk-(\d+\.\d+)')
+if (-not $SeriesMatch.Success) {
+    throw "Cannot determine the OpenWrt release series from $ArchiveName"
+}
+$LuciBranch = "openwrt-$($SeriesMatch.Groups[1].Value)"
 $Dist = Join-Path $ProjectRoot "dist"
 
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
@@ -30,7 +35,7 @@ tar --zstd -xf "/archive/$ArchiveName" -C /build
 sdk_dir=`$(find /build -maxdepth 1 -type d -name 'openwrt-sdk-*' | head -1)
 test -n "`$sdk_dir"
 mv "`$sdk_dir" /build/sdk
-/work/scripts/build-openwrt-sdk.sh /build/sdk
+/work/scripts/build-openwrt-sdk.sh /build/sdk "$LuciBranch"
 "@
 
 docker run --rm `

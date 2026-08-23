@@ -1,9 +1,13 @@
 * text=auto
 *.sh text eol=lf
 *.js text eol=lf
+*.css text eol=lf
 *.json text eol=lf
 *.py text eol=lf
 *.po text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
 Makefile text eol=lf
 /luci-app-haproxy-manager/root/etc/config/* text eol=lf
 /luci-app-haproxy-manager/root/etc/hotplug.d/** text eol=lf

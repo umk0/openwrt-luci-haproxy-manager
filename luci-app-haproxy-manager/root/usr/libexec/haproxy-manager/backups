@@ -2,6 +2,7 @@
 . /usr/libexec/haproxy-manager/common.sh
 
 BASE="$(backup_dir)"
+[ ! -d "$BASE" ] || BASE="$(resolve_storage_dir "$BASE")" || exit 1
 LAST=""
 [ ! -r "$BASE/LAST" ] || LAST="$(basename "$(cat "$BASE/LAST")")"
 

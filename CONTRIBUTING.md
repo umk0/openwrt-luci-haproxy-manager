@@ -3,9 +3,11 @@
 Issues and pull requests are welcome. Keep changes focused and explain any
 effect on HAProxy, firewall, uHTTPd, or existing UCI configuration.
 
-## Checks
+Keep changes compatible with the modern JavaScript LuCI framework and BusyBox
+`ash`. Do not broaden rpcd ACLs when a package-scoped helper can perform the
+operation.
 
-Run the source and package checks before submitting a pull request:
+Before opening a pull request, run:
 
 ```sh
 python3 scripts/check.py
@@ -13,20 +15,17 @@ python3 scripts/build-ipk.py
 python3 scripts/check.py --dist
 ```
 
-Changes to routing or apply/rollback behavior should also be tested on an
-OpenWrt router or in an OpenWrt SDK environment.
+GitHub Actions additionally builds the package with current OpenWrt 24.10 and
+25.12 SDKs for x86_64, ARM64, and MIPS, then runs runtime lifecycle and failure
+injection tests in matching OpenWrt root filesystems.
 
-## Translations
+Changes to routing, apply/rollback, or package lifecycle behavior should also be
+tested on an OpenWrt router before release.
 
-English strings belong in the LuCI JavaScript views and use the standard `_()`
-translation function. Optional translations live in
-`luci-app-haproxy-manager/po/<language>/haproxy-manager.po`; `luci.mk` distributes
-them as separate packages. Every language catalog must contain all keys reported
-by `scripts/check.py`.
+All user-facing strings must use `_()` and be present in every maintained PO
+catalog. The base package remains English-only; translations are built as
+separate LuCI language packages.
 
-## OpenWrt upstream
-
-The application uses the native `luci.mk` and PO translation layout expected by
-`openwrt/luci`. Upstream commits must follow the OpenWrt contribution rules,
-including a package-prefixed subject and a real-name `Signed-off-by` line. Once
-accepted upstream, translations are maintained through OpenWrt Weblate.
+Commits submitted to `openwrt/luci` must follow its component-prefixed subject,
+line length, and real-name `Signed-off-by` requirements. Once accepted upstream,
+translations are maintained through OpenWrt Weblate.
