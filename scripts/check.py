@@ -125,6 +125,7 @@ def check_workflow_contracts():
     ).read_text(encoding="utf-8")
     for required in (
         "--backup",
+        "LOCK_BUSY_EXIT=75",
         "restore_on_error",
         "haproxy-manager.apply",
         "capture_uhttpd_bindings",
@@ -148,14 +149,14 @@ def check_workflow_contracts():
             errors += fail(f"configuration writer is not atomic: {helper}")
 
     ui_source = (resources / "haproxy-manager" / "ui.js").read_text(encoding="utf-8")
-    if "error.code != null" in ui_source:
-        errors += fail("frontend must restore committed UCI after every apply helper failure")
+    if "error.code !== APPLY_LOCK_BUSY" not in ui_source:
+        errors += fail("frontend must only restore UCI when apply did not acquire its lock")
 
     routes_source = (resources / "view" / "haproxy-manager" / "routes.js").read_text(encoding="utf-8")
     if "currentTarget.querySelector('.drag-over-above" in routes_source:
         errors += fail("drag-and-drop apply guard must inspect the target row itself")
-    if "baseHandleSort" in routes_source or "this.map.data.move" in routes_source:
-        errors += fail("visual table sorting must not persist route order or restart HAProxy")
+    if "s.handleSort =" in routes_source:
+        errors += fail("route sorting must use the upstream TableSection implementation")
 
     backup_source = (
         PACKAGE / "root" / "usr" / "libexec" / "haproxy-manager" / "backup"
@@ -186,6 +187,8 @@ def check_workflow_contracts():
     for required in ("auto_recover", "haproxy-manager.apply", "haproxy restart", "INCIDENT_LIMIT"):
         if required not in recover_source:
             errors += fail(f"automatic recovery is missing contract marker: {required}")
+    if 'create_incident "$REASON" || exit 1' in recover_source or "DIAGNOSTICS=/dev/null" not in recover_source:
+        errors += fail("incident storage failures must not prevent automatic recovery")
 
     for helper in ("generate", "validate", "apply-raw-file"):
         source = (PACKAGE / "root/usr/libexec/haproxy-manager" / helper).read_text(encoding="utf-8")
@@ -202,6 +205,8 @@ def check_workflow_contracts():
     makefile = (PACKAGE / "Makefile").read_text(encoding="utf-8")
     if "Package/luci-app-haproxy-manager/prerm" not in makefile or "PKG_UPGRADE" not in makefile:
         errors += fail("package removal must clean runtime state without doing so during upgrades")
+    if 'Package runtime cleanup failed"\n\t\texit 1' in makefile:
+        errors += fail("best-effort runtime cleanup must not block package removal")
 
     return errors
 
@@ -231,6 +236,20 @@ def check_package_contents():
             control_names = set(control_tar.getnames())
             if "./prerm" not in control_names:
                 errors += fail("portable ipk is missing the removal cleanup script")
+            else:
+                prerm_member = control_tar.extractfile("./prerm")
+                prerm_source = prerm_member.read().decode("utf-8") if prerm_member else ""
+                if 'Package runtime cleanup failed"\n        exit 1' in prerm_source:
+                    errors += fail("portable ipk cleanup can block package removal")
+
+            control_file = control_tar.extractfile("./control")
+            control_source = control_file.read().decode("utf-8") if control_file else ""
+            depends = next(
+                (line for line in control_source.splitlines() if line.startswith("Depends:")),
+                "",
+            )
+            if "uclient-fetch" in depends:
+                errors += fail("portable ipk must not require the optional webhook client")
 
         with tarfile.open(fileobj=io.BytesIO(data_member.read()), mode="r:gz") as data_tar:
             payload = set(data_tar.getnames())

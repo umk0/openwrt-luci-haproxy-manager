@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.1 - 2026-08-24
+
+- Keep package removal possible when best-effort runtime cleanup is incomplete.
+- Continue service recovery when incident storage is unavailable and avoid
+  requiring a recovery point when only restarting an unchanged configuration.
+- Store lightweight records for routine WAN address reconciliation while
+  retaining full diagnostics for service and configuration failures.
+- Report rejected recovery storage paths clearly and make webhook delivery use
+  an available `uclient-fetch` or `wget` implementation without a hard package
+  dependency.
+- Use LuCI's native sortable-section ordering and avoid duplicate frontend
+  rollback after the apply helper has already restored its recovery point.
+
 ## 0.6.0 - 2026-08-23
 
 - Reconcile generated listeners after dynamic WAN address changes while keeping

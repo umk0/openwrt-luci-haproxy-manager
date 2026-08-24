@@ -199,9 +199,11 @@ uci commit haproxy_manager
 mkdir /var/lock/haproxy-manager.apply
 backup_id="$(basename "$($HELPERS/backup)")"
 echo "$$" > /var/lock/haproxy-manager.apply/pid
-if $HELPERS/apply --backup "$backup_id" >/dev/null 2>&1; then
-	fail "apply ignored a live operation lock"
-fi
+set +e
+$HELPERS/apply --backup "$backup_id" >/dev/null 2>&1
+lock_status=$?
+set -e
+assert_eq "$lock_status" 75 "apply lock contention exit code"
 [ -d /var/lock/haproxy-manager.apply ] || fail "live operation lock was removed"
 rm -f /var/lock/haproxy-manager.apply/pid
 rmdir /var/lock/haproxy-manager.apply
@@ -253,6 +255,10 @@ echo 198.51.100.12 > /tmp/haproxy-manager-test-wan
 $HELPERS/recover ifupdate wan
 assert_contains "$(cat /etc/haproxy.cfg)" '198.51.100.12:80' "reconciled WAN listener"
 assert_contains "$($HELPERS/incidents)" "reconciled" "successful WAN incident"
+latest_incident="$(cat /root/haproxy-manager-incidents/LAST)"
+if grep -q 'Kernel OOM messages' "/root/haproxy-manager-incidents/$latest_incident/diagnostics.log"; then
+	fail "routine WAN reconciliation wrote full incident diagnostics"
+fi
 
 before_failure="$(sha256sum /etc/haproxy.cfg | awk '{ print $1 }')"
 echo 198.51.100.13 > /tmp/haproxy-manager-test-wan
@@ -266,6 +272,17 @@ rm -f /tmp/haproxy-manager-test-restart-fail
 echo 198.51.100.12 > /tmp/haproxy-manager-test-wan
 $HELPERS/recover network test
 assert_contains "$($HELPERS/incidents)" "recovered" "stopped service recovery"
+latest_incident="$(cat /root/haproxy-manager-incidents/LAST)"
+assert_contains "$(cat "/root/haproxy-manager-incidents/$latest_incident/diagnostics.log")" \
+	"Kernel OOM messages" "stopped service full diagnostics"
+
+rm -f /tmp/haproxy-manager-test-running
+uci set haproxy_manager.main.incident_dir=/etc/haproxy-manager-incidents
+uci commit haproxy_manager
+$HELPERS/recover network unsafe-incident-storage
+[ -f /tmp/haproxy-manager-test-running ] || fail "incident storage failure prevented service recovery"
+uci set haproxy_manager.main.incident_dir=/root/haproxy-manager-incidents
+uci commit haproxy_manager
 
 echo 198.51.100.14 > /tmp/haproxy-manager-test-wan
 cat > "$MOCK_BIN/haproxy" <<'EOF'
@@ -310,9 +327,10 @@ if $HELPERS/validate /etc/passwd >/dev/null 2>&1; then
 fi
 uci set haproxy_manager.main.backup_dir=/etc/haproxy-manager-backups
 uci commit haproxy_manager
-if $HELPERS/backup >/dev/null 2>&1; then
+if backup_error="$($HELPERS/backup 2>&1)"; then
 	fail "backup accepted an unsafe storage path"
 fi
+assert_contains "$backup_error" "must be a plain path under /root or /mnt" "unsafe storage path error"
 rm -f /root/haproxy-manager-storage-link
 ln -s /etc /root/haproxy-manager-storage-link
 uci set haproxy_manager.main.backup_dir=/root/haproxy-manager-storage-link

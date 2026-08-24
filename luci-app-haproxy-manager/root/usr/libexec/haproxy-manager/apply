@@ -4,6 +4,7 @@ set -eu
 umask 077
 
 LOCK_DIR=/var/lock/haproxy-manager.apply
+LOCK_BUSY_EXIT=75
 TMP_CFG="/tmp/haproxy-manager-apply.$$"
 BACKUP_ID=""
 APPLIED=0
@@ -18,7 +19,10 @@ elif [ "$#" -ne 0 ]; then
 	exit 1
 fi
 
-operation_lock_acquire "$LOCK_DIR" || { echo "Another HAProxy Manager operation is already running." >&2; exit 1; }
+operation_lock_acquire "$LOCK_DIR" || {
+	echo "Another HAProxy Manager operation is already running." >&2
+	exit "$LOCK_BUSY_EXIT"
+}
 
 cleanup_temp() {
 	rm -f "$TMP_CFG"

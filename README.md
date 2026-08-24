@@ -22,7 +22,7 @@ for `/etc/haproxy.cfg`.
 - Named recovery points with one-click restore for HAProxy, firewall, and
   uHTTPd state.
 - Seven bounded incident reports with in-LuCI diagnostics and optional redacted
-  webhook notifications.
+  webhook notifications. Routine WAN changes use lightweight reports.
 - Optional uHTTPd binding to the LAN address so HAProxy can own WAN ports 80/443.
 - Responsive LuCI views built from standard theme classes.
 - English base package with optional Russian, Spanish, Korean, Japanese, and
@@ -145,8 +145,11 @@ Backups are stored in `/root/haproxy-manager-backups` by default. Only the seven
 newest recovery points are retained; older snapshots are removed automatically.
 Before an automatic service recovery, diagnostics are written under
 `/root/haproxy-manager-incidents`; only the seven newest incidents are retained.
-The reports can be viewed on the Status page. Webhook payloads never contain
-addresses, configuration, or diagnostic logs.
+Service and configuration failures include bounded system diagnostics, while a
+routine WAN-address reconciliation records only its metadata and result. The
+reports can be viewed on the Status page. Webhook payloads never contain
+addresses, configuration, or diagnostic logs. Webhooks use an installed
+`uclient-fetch` or compatible `wget` implementation.
 
 See [Operations](docs/OPERATIONS.md) for first-run, multi-WAN, upgrade, removal,
 monitoring, and emergency recovery procedures. See [Security](SECURITY.md) for

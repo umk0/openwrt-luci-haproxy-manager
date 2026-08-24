@@ -10,6 +10,7 @@ var callUciCommit = rpc.declare({
 	params: [ 'config' ],
 	reject: true
 });
+var APPLY_LOCK_BUSY = 75;
 
 function recoveryId(output) {
 	var path = String(output || '').trim();
@@ -67,7 +68,7 @@ return baseclass.extend({
 			committed = true;
 			return this.exec('/usr/libexec/haproxy-manager/apply', [ '--backup', backupId ]);
 		}.bind(this)).catch(function(error) {
-			if (!committed || !backupId)
+			if (!committed || !backupId || error.code !== APPLY_LOCK_BUSY)
 				throw error;
 
 			return this.exec('/usr/libexec/haproxy-manager/rollback', [ backupId ]).catch(function() {
