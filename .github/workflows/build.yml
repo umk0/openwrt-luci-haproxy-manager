@@ -161,6 +161,8 @@ jobs:
           docker exec haproxy-manager-runtime sh /ci/tests/openwrt-runtime.sh
           docker exec haproxy-manager-runtime sh -c \
             '/usr/libexec/haproxy-manager/apply >/dev/null; sleep 3'
+          docker exec haproxy-manager-runtime mv \
+            /etc/init.d/haproxy /tmp/haproxy-manager-haproxy-init
           if [ "$PACKAGE_FORMAT" = ipk ]; then
             docker exec haproxy-manager-runtime opkg remove \
               luci-i18n-haproxy-manager-ru luci-app-haproxy-manager
@@ -168,6 +170,8 @@ jobs:
             docker exec haproxy-manager-runtime apk del \
               luci-i18n-haproxy-manager-ru luci-app-haproxy-manager
           fi
+          docker exec haproxy-manager-runtime sh -c \
+            'mv /tmp/haproxy-manager-haproxy-init /etc/init.d/haproxy; chmod 755 /etc/init.d/haproxy; /etc/init.d/haproxy stop; /etc/init.d/haproxy disable'
           docker exec haproxy-manager-runtime sh -c \
             'uci -q get uhttpd.main.listen_http | grep -F 0.0.0.0:80'
           docker exec haproxy-manager-runtime sh -c \

@@ -13,7 +13,14 @@ esac
 case "$URL" in
 	*[![:graph:]]*) echo "Webhook URL contains invalid characters" >&2; exit 1 ;;
 esac
-command -v uclient-fetch >/dev/null 2>&1 || { echo "uclient-fetch is not installed" >&2; exit 1; }
+if command -v uclient-fetch >/dev/null 2>&1; then
+	FETCHER=uclient-fetch
+elif command -v wget >/dev/null 2>&1; then
+	FETCHER=wget
+else
+	echo "A compatible wget implementation is required for webhook delivery" >&2
+	exit 1
+fi
 [ -r /usr/share/libubox/jshn.sh ] || { echo "jshn.sh is not available" >&2; exit 1; }
 
 INCIDENT_ID="$(printf '%s' "${1:-unknown}" | tr -cd '0-9-')"
@@ -32,6 +39,6 @@ json_add_string interface "$INTERFACE"
 json_add_string reason "$REASON"
 PAYLOAD="$(json_dump)"
 
-uclient-fetch -q -T 10 -O /dev/null \
+"$FETCHER" -q -T 10 -O /dev/null \
 	--header='Content-Type: application/json' \
 	--post-data="$PAYLOAD" "$URL"

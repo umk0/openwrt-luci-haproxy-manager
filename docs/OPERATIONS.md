@@ -51,8 +51,9 @@ UDP is not handled by HAProxy. Keep UDP redirects in OpenWrt Firewall.
 ## Recovery and incidents
 
 The Status page lists the seven latest recovery points and automatic recovery
-incidents. Each incident contains bounded local diagnostics. Reports and
-recovery points default to:
+incidents. Service and configuration failures contain bounded local diagnostics;
+routine WAN-address reconciliation stores a lightweight metadata record. Reports
+and recovery points default to:
 
 ```text
 /root/haproxy-manager-incidents
@@ -61,7 +62,8 @@ recovery points default to:
 
 Optional webhooks contain only the incident ID, result, action, interface, and
 reason. They do not include IP addresses, HAProxy configuration, or logs. Use an
-HTTPS endpoint whenever it is reachable from the router.
+HTTPS endpoint whenever it is reachable from the router. Webhook delivery uses
+an installed `uclient-fetch` or compatible `wget` implementation.
 
 Router-side recovery is not external availability monitoring. Monitor a public
 health endpoint from another network and alert when it fails.

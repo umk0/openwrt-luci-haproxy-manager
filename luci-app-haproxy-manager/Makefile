@@ -6,7 +6,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_VERSION:=0.6.0
+PKG_VERSION:=0.6.1
 PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=Philipp Shklyaev <job@umk0.ru>
@@ -14,7 +14,7 @@ LUCI_MAINTAINER:=$(PKG_MAINTAINER)
 
 LUCI_TITLE:=LuCI HAProxy Manager
 LUCI_DESCRIPTION:=Manage Web and TCP HAProxy services, firewall access, and recovery points.
-LUCI_DEPENDS:=+luci-base +rpcd +rpcd-mod-file +uclient-fetch +haproxy
+LUCI_DEPENDS:=+luci-base +rpcd +rpcd-mod-file +haproxy
 LUCI_PKGARCH:=all
 
 define Package/luci-app-haproxy-manager/conffiles
@@ -39,10 +39,8 @@ case "$${PKG_UPGRADE:-0}:$${1:-}" in
 	1:*|*:upgrade) exit 0 ;;
 esac
 [ -n "$${IPKG_INSTROOT}" ] || {
-	/usr/libexec/haproxy-manager/uninstall >/dev/null 2>&1 || {
+	/usr/libexec/haproxy-manager/uninstall >/dev/null 2>&1 ||
 		logger -t haproxy-manager "Package runtime cleanup failed"
-		exit 1
-	}
 }
 exit 0
 endef

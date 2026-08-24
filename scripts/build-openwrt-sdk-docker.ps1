@@ -16,8 +16,15 @@ if (-not $SeriesMatch.Success) {
 }
 $LuciBranch = "openwrt-$($SeriesMatch.Groups[1].Value)"
 $Dist = Join-Path $ProjectRoot "dist"
+$PackageExtension = if ($SeriesMatch.Groups[1].Value -eq "24.10") { ".ipk" } else { ".apk" }
 
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
+Get-ChildItem -Path $Dist -File -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Name -like "luci-app-haproxy-manager*$PackageExtension" -or
+        $_.Name -like "luci-i18n-haproxy-manager*$PackageExtension"
+    } |
+    Remove-Item -Force
 
 $ProjectMount = ($ProjectRoot -replace "\\", "/")
 $ArchiveMount = ($ArchivePath -replace "\\", "/")
@@ -37,6 +44,7 @@ test -n "`$sdk_dir"
 mv "`$sdk_dir" /build/sdk
 /work/scripts/build-openwrt-sdk.sh /build/sdk "$LuciBranch"
 "@
+$script = $script -replace "`r`n", "`n"
 
 docker run --rm `
     -v "${ProjectMount}:/work" `
@@ -44,3 +52,13 @@ docker run --rm `
     -w /build `
     $Image `
     bash -lc $script
+
+if ($LASTEXITCODE -ne 0) {
+    throw "OpenWrt SDK build failed with exit code $LASTEXITCODE"
+}
+
+$BasePackages = @(Get-ChildItem -Path $Dist -File |
+    Where-Object { $_.Name -like "luci-app-haproxy-manager*$PackageExtension" })
+if ($BasePackages.Count -ne 1 -or $BasePackages[0].Length -eq 0) {
+    throw "OpenWrt SDK did not produce exactly one non-empty base $PackageExtension package"
+}

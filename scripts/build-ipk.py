@@ -184,10 +184,8 @@ case "${PKG_UPGRADE:-0}:${1:-}" in
     1:*|*:upgrade) exit 0 ;;
 esac
 [ -n "${IPKG_INSTROOT}" ] || {
-    /usr/libexec/haproxy-manager/uninstall >/dev/null 2>&1 || {
+    /usr/libexec/haproxy-manager/uninstall >/dev/null 2>&1 ||
         logger -t haproxy-manager "Package runtime cleanup failed"
-        exit 1
-    }
 }
 exit 0
 """
@@ -200,7 +198,7 @@ exit 0
 """
     build_package(
         NAME,
-        "luci-base, rpcd, rpcd-mod-file, uclient-fetch, haproxy",
+        "luci-base, rpcd, rpcd-mod-file, haproxy",
         "Manage Web and TCP HAProxy services, firewall access, and recovery points.",
         ((PKG / "root", "."), (PKG / "htdocs", "./www")),
         conffiles="/etc/config/haproxy_manager\n",

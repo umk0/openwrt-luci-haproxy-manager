@@ -376,36 +376,6 @@ return view.extend({
 			return result;
 		};
 
-		s.handleSort = function(ev) {
-			var th = ev.target && ev.target.closest ? ev.target.closest('th[data-sortable-row]') : null;
-			if (!th)
-				return;
-
-			var descending = th.getAttribute('data-sort-direction') == 'desc';
-			var headerRow = ev.currentTarget;
-			var index = Array.prototype.indexOf.call(headerRow.querySelectorAll('th'), th);
-			var table = headerRow.closest('table') || headerRow.parentNode;
-			var body = table.tBodies && table.tBodies[0] ? table.tBodies[0] : table;
-			var rows = Array.prototype.slice.call(table.querySelectorAll('tr.cbi-section-table-row'));
-
-			headerRow.querySelectorAll('th').forEach(function(other) {
-				if (other !== th)
-					other.removeAttribute('data-sort-direction');
-			});
-
-			rows.sort(function(a, b) {
-				var left = a.childNodes[index] ? a.childNodes[index].textContent.trim() : '';
-				var right = b.childNodes[index] ? b.childNodes[index].textContent.trim() : '';
-				var order = L.naturalCompare(left, right);
-				return descending ? -order : order;
-			});
-
-			window.requestAnimationFrame(function() {
-				rows.forEach(function(row) { body.appendChild(row); });
-				th.setAttribute('data-sort-direction', descending ? 'asc' : 'desc');
-			});
-		};
-
 		return m.render().then(function(node) {
 			var filterInput = E('input', {
 				'id': 'haproxy-route-filter',

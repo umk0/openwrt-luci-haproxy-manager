@@ -18,14 +18,20 @@ uci_get() {
 backup_dir() {
 	local dir
 	dir="$(uci_get main backup_dir /root/haproxy-manager-backups)"
-	is_safe_storage_dir "$dir" || return 1
+	is_safe_storage_dir "$dir" || {
+		echo "Recovery point directory must be a plain path under /root or /mnt: $dir" >&2
+		return 1
+	}
 	printf '%s\n' "$dir"
 }
 
 incident_dir() {
 	local dir
 	dir="$(uci_get main incident_dir /root/haproxy-manager-incidents)"
-	is_safe_storage_dir "$dir" || return 1
+	is_safe_storage_dir "$dir" || {
+		echo "Incident directory must be a plain path under /root or /mnt: $dir" >&2
+		return 1
+	}
 	printf '%s\n' "$dir"
 }
 
